@@ -161,7 +161,7 @@ table{border-collapse:collapse;width:100%}
 .pop h4{margin:0 0 8px;font-size:14px;color:var(--g)}
 .pop .ph{display:flex;align-items:center;justify-content:space-between;margin:-4px -4px 6px 0}
 .pop .ph h4{margin:0}
-.pop .pX{width:34px;height:34px;padding:0;border-radius:50%;font-size:20px;line-height:1;color:#555}
+.pop .pX{position:absolute;top:-46px;right:2px;width:38px;height:38px;padding:0;border-radius:50%;font-size:22px;line-height:1;color:#333;background:#fff;border:0;box-shadow:0 3px 12px rgba(0,0,0,.35)}
 .pop .r{display:flex;gap:6px;margin-bottom:8px;align-items:center}
 .pop input,.pop select{height:40px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:0 8px;min-width:0;flex:1}
 .pop button{height:40px;border:0;border-radius:9px;padding:0 10px;cursor:pointer;background:#fff;border:1px solid var(--line);white-space:nowrap;flex:none}
@@ -464,7 +464,7 @@ function checkBox(p,A,B){
   add(lastEnd(B,"kiji"),"生地 終了 "+A.reach+"回転");
   add(lastEnd(B,"yaki"),"皮 焼き終わり→清掃");
   add(lastEnd(B,"sai"),"催事作成 完了 "+evVal(p)+"個");
-  add(840,"店舗の残数確認→売切れそうなら追加");
+  add(840,"残数確認→足りなければ追加");
   add(CONF.zaiko,"翌日の仕込み 完了");
   add(CONF.kata,"在庫数え・あんこ日付");
   add(CONF.close+CONF.closeWork,"閉店作業 完了・日報");
@@ -599,7 +599,7 @@ function openPop(b,B,isNew){var p=plan();
   closePop();if(!isNew){var me=document.querySelector('#sheet .bar[data-i="'+B.indexOf(b)+'"]');if(me){me.classList.add("editing");$("sheet").classList.add("editing")}}
   var kinds=Object.keys(KIND).map(function(k){return'<option value="'+k+'"'+(k===b.k?' selected':'')+'>'+KIND[k].t+'</option>'}).join('')+(b.k&&!KIND[b.k]?'<option value="'+b.k+'" selected>'+kindInfo(b.k).t+'</option>':'');
   var who=p.staff.map(function(x,i){return'<option value="'+i+'"'+(i===b.p?' selected':'')+'>'+(x.name||("担当"+(i+1)))+'</option>'}).join('');
-  var P=$("pop");P.innerHTML='<div class="ph">'+(isNew?'<h4>帯を足す</h4>':'<span></span>')+'<button class="pX" id="pC" aria-label="閉じる">×</button></div><div class="r"><select id="pK">'+kinds+'</select><input id="pT" placeholder="表示する言葉（任意）" value="'+esc(b.t||"")+'"></div><div class="r"><select id="pS">'+optsAll(b.s)+'</select><span>〜</span><select id="pE">'+optsAll(b.e)+'</select><select id="pP">'+who+'</select></div><div class="r">'+(isNew?'':'<button class="x" id="pD">消す</button>')+'<button class="go" id="pO">決定</button></div>';
+  var P=$("pop");P.innerHTML='<button class="pX" id="pC" aria-label="閉じる">×</button>'+(isNew?'<h4>帯を足す</h4>':'')+'<div class="r"><select id="pK">'+kinds+'</select><input id="pT" placeholder="表示する言葉（任意）" value="'+esc(b.t||"")+'"></div><div class="r"><select id="pS">'+optsAll(b.s)+'</select><span>〜</span><select id="pE">'+optsAll(b.e)+'</select><select id="pP">'+who+'</select></div><div class="r">'+(isNew?'':'<button class="x" id="pD">消す</button>')+'<button class="go" id="pO">決定</button></div>';
   P.classList.add("on");
   $("pC").onclick=closePop;
     if(!isNew)$("pD").onclick=function(){B.splice(B.indexOf(b),1);p.bars=B;save();closePop();render()};
