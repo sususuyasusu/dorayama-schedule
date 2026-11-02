@@ -335,7 +335,9 @@ function compute(p){
   // 店売り作成の開始を逆算：人が順に来るので後ろから積む
   var need=stVal(p)/c.rate*60,mS=mEnd,acc=0;
   while(acc<need&&mS>T0){mS-=5;acc+=5*msPeople.filter(function(x){return x.s<=mS&&x.e>mS}).length;if(!msPeople.some(function(x){return x.s<=mS}))break}
-  A={rot:rot,pace:pace,gS:gS,gE:gE,yS:yS,yE:yE,mS:mS,mEnd:mEnd,mShort:acc<need,eE:Infinity};
+  var mDone=mEnd,left=need-acc;
+  while(left>0&&mDone<c.close){var mk=st.filter(function(x){return hasR(x,"make")&&x.s<=mDone&&x.e>mDone}).length;if(!mk)break;left-=5*mk;mDone+=5}
+  A={rot:rot,pace:pace,gS:gS,gE:gE,yS:yS,yE:yE,mS:mS,mEnd:mEnd,mDone:mDone,eE:Infinity};
   // 休憩：6時間超は45分、8時間超は60分。レジは13時台
   var cand=st.map(function(x,i){return{i:i,x:x}}).filter(function(o){return o.x.e-o.x.s>360});
   var base=Math.max(yE+c.kataYaki,gE+c.kataKiji,705);base=Math.ceil(base/15)*15;
@@ -373,7 +375,7 @@ function kindOf(role,t,A){var c=CONF;
     return"jun"}
   if(role==="kiji"){if(t<A.gE)return"kiji";if(t<A.gE+c.kataKiji)return"kkat"}
   if(role==="yaki"){if(t<A.yS)return"yjun";if(t<A.yE)return"yaki";if(t<A.yE+c.kataYaki)return"ykat"}
-  if(role==="make"){if(t<A.mS)return"jun";if(t<A.mEnd)return"mise"}
+  if(role==="make"){if(t<A.mS)return"jun";if(t<A.mDone)return"mise"}
   if(t<A.eE)return"sai";
   if(t<c.zaiko)return"shik";
   if(t<c.kata)return"zai";
@@ -463,7 +465,9 @@ function warn(p,A){
   if(!st.some(function(x){return x.lead}))bad("責任者を星印で選んでください");
   if(!A.rot)bad("回転数が0です");
   if(A.pace<c.pace)bad("1回転"+Math.round(A.pace*10)/10+"分のペースが必要です。"+hm(c.stopKiji)+"に間に合わせるのが厳しい日です（生地の人を増やす／作成数を調整）");
-  if(A.mShort)bad("店売り作成が開店に間に合いません（作成・レジの朝の人を増やす）");
+  var needM=stVal(p)/c.rate*60,got=0,doneT=null;
+  for(var t=T0;t<T1&&doneT===null;t+=5){got+=5*curB.filter(function(b){return String(b.k).split("+").indexOf("mise")>=0&&b.s<=t&&b.e>t}).length;if(got>=needM)doneT=t+5}
+  if(needM&&(doneT===null||doneT>A.mEnd))bad("店売り作成が開店前の"+hm(A.mEnd)+"に終わりません。"+stVal(p)+"個に約"+Math.ceil(needM)+"分（1人1時間"+c.rate+"個の推定）かかり、今の帯だと"+(doneT===null?"終わりません":hm(doneT)+"までかかります")+"（朝の人を増やす／帯を足す）");
   if(A.eShort||A.eE>c.zaiko)bad("催事作成が"+hm(c.zaiko)+"までに終わりません（人を足すか帯を調整）");
   var work=st.reduce(function(s,x,i){var b=A.brk[i];return s+(x.e-x.s-(b?b.e-b.s:0))},0)/60,need=(stVal(p)+evVal(p))/c.hourlyRef;
   if(need){var msg="組んだ"+Math.round(work*10)/10+"人時／必要の目安"+Math.round(need*10)/10+"人時（実績23個/人時）。";
