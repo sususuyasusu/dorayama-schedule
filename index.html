@@ -54,6 +54,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;b
 .work{flex:1;min-height:0;display:flex;background:var(--g)}
 .stage{flex:1;min-width:0;overflow:auto;padding:0 10px 14px 14px}
 @media (max-width:760px),(max-height:500px){.palette{display:none}.app{height:auto}.work{display:block}.stage{padding:0 8px 16px}.print{height:38px}}
+.addrow{flex:none;height:12mm;display:flex;align-items:center;justify-content:center;border-top:.3mm solid #aaa;background:#f4f4f0;color:#1f4d3a;font-size:12pt;font-weight:700;cursor:pointer}
 .palette{width:178px;flex:none;background:#fff;overflow:auto;padding:12px 11px;color:#222}
 .palette h3{margin:0 0 10px;font-size:15px;font-weight:700}
 .palette p{font-size:11px;color:#777;margin:8px 0 0}
@@ -409,9 +410,9 @@ function render(){
       var si=w>=25?'<small>〜'+hm(b.e)+'</small>':'';
       return'<div class="bar '+K.c+' '+cl+(sel===b?' sel':'')+'" data-i="'+B.indexOf(b)+'" style="left:'+X(b.s)+'%;width:'+(X(b.e)-X(b.s))+'%"><b>'+esc(lab)+'</b>'+si+'<div class="rz"></div></div>'}).join('');
     return'<div class="grow"><div class="gname" data-i="'+i+'"><button class="rmv np" data-a="del" title="外す">×</button><b class="ed" data-a="name"'+(x.name.length>4?' style="font-size:13.5pt"':'')+'>'+(x.name?esc(x.name):'<span class="blank"></span>')+'</b><em><span class="ed" data-a="time">'+hm(x.s)+'〜'+hm(x.e)+'</span>'+(x.lead?'<span class="lk ed" data-a="lead">責任者</span>':'<button class="mklead np" data-a="lead">責任者に</button>')+'<span class="rl" data-a="role">'+roleLabel(x)+'</span></em></div><div class="gtrack" data-p="'+i+'"><div class="shiftbg" style="left:'+X(x.s)+'%;width:'+(X(x.e)-X(x.s))+'%"></div>'+gr+bs+'</div></div>'}).join('');
-  h+='<div class="gantt"><div class="grow ghead"><div class="gname">名前／勤務<button class="addp np" id="addP">＋人</button></div><div class="gtrack">'+gr+tk+'</div></div>'+
+  h+='<div class="gantt"><div class="grow ghead"><div class="gname">名前／勤務</div><div class="gtrack">'+gr+tk+'</div></div>'+
      '<div class="grow gpace"><div class="gname"><b>生地ペース</b><em>上＝目標／下＝実際を記入</em></div><div class="gtrack">'+gr+pc+'</div></div>'+
-     '<div class="grows">'+rows+'</div></div>';
+     '<div class="grows">'+rows+'</div><div class="addrow np" id="addP">＋ 人を足す（タイミーなど、エアシフトに無い人）</div></div>';
   // 下段
   h+='<div class="bt">'+prodBox(p)+checkBox(p,A,B)+sideBox(p)+'</div>';
   $("sheet").innerHTML=h+'<datalist id="roster">'+store.roster.map(function(n){return'<option value="'+esc(n)+'">'}).join('')+'</datalist>';
@@ -505,7 +506,7 @@ function changed(rebuild){var p=plan();if(rebuild)p.bars=null;store.wd[parseD($(
 function restore(u){var p=plan(),o=JSON.parse(u);["staff","bars","ov","note","edited","airSig"].forEach(function(k){p[k]=o[k]});lastState=u;save();closePop();render()}
 $("undo").onclick=function(){var u=undoSt.pop();if(!u)return;redoSt.push(lastState);restore(u)};
 $("redo").onclick=function(){var u=redoSt.pop();if(!u)return;undoSt.push(lastState);restore(u)};
-$("reset").onclick=function(){var p=plan();p.bars=null;p.ov={};changed(true)};
+$("reset").onclick=function(){var p=plan();p.ov={};if(air&&air.people&&air.people.length)mergeAir(p,airSig());else p.staff=p.staff.filter(function(x){return x.manual}).concat(defaults());p.bars=null;changed(true)};
 $("print").onclick=function(){sel=null;render();window.print()};
 function go(ds){undoSt=[];redoSt=[];lastState=null;$("date").value=ds;sel=null;closePop();Promise.all([fetchDay(ds),fetchAir(ds)]).then(function(){applyAir();render();fit()})}
 $("date").onchange=function(){go(this.value)};
