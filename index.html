@@ -31,6 +31,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .ib{width:42px;height:42px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;display:grid;place-items:center}
 .ib svg,.sv{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .status{font-size:12.5px;color:#d9e7dc;flex:1;min-width:140px}
+.status:empty{display:none}
+.acts{display:flex;gap:6px;flex-wrap:nowrap;margin-left:auto}
+@media (max-width:760px){.acts{width:100%;margin-left:0}.acts .sub,.acts .print{flex:1 1 auto;padding:0 6px;font-size:14px;white-space:nowrap}.acts .print{flex-grow:1.6}}
 .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
 .nums label{font-size:11px;color:var(--mut);display:block}
 .nums input{width:100%;height:36px;border:1px solid var(--line);border-radius:8px;text-align:center;font-weight:700;background:#fff;margin-top:2px}
@@ -180,10 +183,12 @@ table{border-collapse:collapse;width:100%}
     <button class="ib" id="next" aria-label="次の日"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     <div class="status" id="status"></div>
     
-    <button class="sub" id="undo" disabled>戻る</button>
-    <button class="sub" id="redo" disabled>進む</button>
-    <button class="sub" id="reset">組み直す</button>
-    <button class="print" id="print">A3で印刷</button>
+    <div class="acts">
+      <button class="sub" id="undo" disabled>戻る</button>
+      <button class="sub" id="redo" disabled>進む</button>
+      <button class="sub" id="reset">組み直す</button>
+      <button class="print" id="print">A3で印刷</button>
+    </div>
   </header>
   <ul class="warn" id="warn"></ul>
   <div class="work">
