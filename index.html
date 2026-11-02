@@ -110,6 +110,8 @@ textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;b
 .bar .rz,.bar .rzl{position:absolute;right:0;top:0;bottom:0;width:6mm;cursor:ew-resize;z-index:1}
 .bar .rzl{right:auto;left:0}
 .bar.sel{outline:1mm solid #d8552c}
+.sheet.editing .bar{opacity:.35}
+.sheet.editing .bar.editing{opacity:1;outline:1.2mm solid #d8552c;outline-offset:.4mm;z-index:6;box-shadow:0 2mm 6mm rgba(0,0,0,.4)}
 .bar{color:#fff;border:0;border-bottom:1mm solid rgba(0,0,0,.28);border-radius:1.2mm}
 .k-kiji{background:#f7983e}.k-yaki{background:#e8665a}.k-mise{background:#5cab13}.k-sai{background:#2a9fd6}.k-reji{background:#b474b8}.k-shik{background:#c99a5b}.k-zai{background:#17a398}.k-kata{background:#7f8c95}.k-jun{background:#a98f6f}.k-open{background:#fb6fa8}.k-free{background:#fb6fa8}
 .k-kyu{background:#fff;color:#555;border:.35mm dashed #999;border-radius:1.2mm}
@@ -584,8 +586,9 @@ function bindBars(B){
 function bindTracks(B){document.querySelectorAll("#sheet .gtrack[data-p]").forEach(function(tr){tr.onclick=function(ev){if(ev.target.closest(".bar"))return;
     var r=tr.getBoundingClientRect(),t=T0+Math.round(((ev.clientX-r.left)/r.width*(T1-T0))/15)*15;t=Math.max(T0,Math.min(T1-30,t));
     openPop({p:+tr.dataset.p,s:t,e:Math.min(T1,t+60),k:"free"},B,true)}})}
-function closePop(){$("pop").classList.remove("on")}
+function closePop(){$("pop").classList.remove("on");$("sheet").classList.remove("editing");document.querySelectorAll("#sheet .bar.editing").forEach(function(e){e.classList.remove("editing")})}
 function openPop(b,B,isNew){var p=plan();
+  closePop();if(!isNew){var me=document.querySelector('#sheet .bar[data-i="'+B.indexOf(b)+'"]');if(me){me.classList.add("editing");$("sheet").classList.add("editing")}}
   var kinds=Object.keys(KIND).map(function(k){return'<option value="'+k+'"'+(k===b.k?' selected':'')+'>'+KIND[k].t+'</option>'}).join('')+(b.k&&!KIND[b.k]?'<option value="'+b.k+'" selected>'+kindInfo(b.k).t+'</option>':'');
   var who=p.staff.map(function(x,i){return'<option value="'+i+'"'+(i===b.p?' selected':'')+'>'+(x.name||("担当"+(i+1)))+'</option>'}).join('');
   var P=$("pop");P.innerHTML='<h4>'+(isNew?'帯を足す':'この帯を直す')+'</h4><div class="r"><select id="pK">'+kinds+'</select><input id="pT" placeholder="表示する言葉（任意）" value="'+esc(b.t||"")+'"></div><div class="r"><select id="pS">'+optsAll(b.s)+'</select><span>〜</span><select id="pE">'+optsAll(b.e)+'</select><select id="pP">'+who+'</select></div><div class="r">'+(isNew?'':'<button class="x" id="pD">消す</button>')+'<button id="pC">やめる</button><button class="go" id="pO">決定</button></div>';
