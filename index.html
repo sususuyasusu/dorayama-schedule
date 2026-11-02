@@ -53,6 +53,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;b
 .hint{font-size:11.5px;line-height:1.5;color:#cfe0d4;margin:8px 2px 0}
 .work{flex:1;min-height:0;display:flex;background:var(--g)}
 .stage{flex:1;min-width:0;overflow:auto;padding:0 10px 14px 14px}
+@media (max-width:760px),(max-height:500px){.palette{display:none}.app{height:auto}.work{display:block}.stage{padding:0 8px 16px}.print{height:38px}}
 .palette{width:178px;flex:none;background:#fff;overflow:auto;padding:12px 11px;color:#222}
 .palette h3{margin:0 0 10px;font-size:15px;font-weight:700}
 .palette p{font-size:11px;color:#777;margin:8px 0 0}
@@ -96,7 +97,8 @@ textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;b
 .grows{flex:1;display:flex;flex-direction:column;min-height:0}
 .grows .grow{flex:1;min-height:0;border-bottom:.3mm solid #bbb}
 .grows .grow:last-child{border-bottom:0}
-.bar{position:absolute;top:9%;bottom:9%;box-sizing:border-box;padding:.3mm 1mm;overflow:hidden;display:flex;flex-direction:column;justify-content:center;line-height:1.08;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.bar{position:absolute;top:9%;bottom:9%;box-sizing:border-box;padding:.3mm 1mm;overflow:hidden;display:flex;flex-direction:column;justify-content:center;line-height:1.08;touch-action:manipulation;-webkit-touch-callout:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.bar.lift{outline:1mm solid #d8552c;z-index:5;box-shadow:0 2mm 5mm rgba(0,0,0,.35)}
 .bar b{font-size:15pt;font-weight:900;white-space:nowrap}
 .bar small{font-size:11pt;font-weight:700;white-space:nowrap}
 .bar.s b{font-size:10.5pt;white-space:normal;line-height:1.05}.bar.s small{font-size:8pt}
@@ -177,13 +179,14 @@ table{border-collapse:collapse;width:100%}
     <div class="status" id="status"></div>
     <span class="code" id="codeBox" hidden>シフトの合言葉 <input id="code" autocomplete="off"><button id="codeGo">読む</button></span>
     <button class="air" id="airBtn" hidden></button>
+    <button class="sub" id="undo" disabled>元に戻す</button>
     <button class="sub" id="reset">組み直す</button>
     <button class="print" id="print">A3で印刷</button>
   </header>
   <ul class="warn" id="warn"></ul>
   <div class="work">
     <main class="stage" id="stage"><div class="fit" id="fit"><div class="sheet" id="sheet"></div></div></main>
-    <aside class="palette" id="palette"><h3>ワーク</h3><div id="pal"></div><p>表へドラッグして追加</p></aside>
+    <aside class="palette" id="palette"><h3>ワーク</h3><div id="pal"></div><p>表へドラッグして追加。<br>指のときは、帯を長押ししてから動かします。</p></aside>
   </div>
 </div>
 <div class="pop" id="pop"></div>
@@ -204,9 +207,11 @@ var S={};
 var store=load();
 var cache={};
 var cur={rot:0,kaiten:0,storeN:0,eventN:0,tomorrow:null,blocks:[],ok:false};
-var sel=null;
+var sel=null,undoSt=[],lastState=null,lastDate=null;
 
-function load(){try{var o=JSON.parse(localStorage.getItem("dsch1"))||{};}catch(e){var o={}}o.plans=o.plans||{};o.wd=o.wd||{};o.roster=o.roster||[];o.roleOf=o.roleOf||{};return o}
+function load(){try{var o=JSON.parse(localStorage.getItem("dsch1"))||{};}catch(e){var o={}}o.plans=o.plans||{};o.wd=o.wd||{};o.roster=o.roster||[];o.roleOf=o.roleOf||{};
+  if(o.v!==2){Object.keys(o.plans).forEach(function(k){o.plans[k].bars=null});o.v=2;try{localStorage.setItem("dsch1",JSON.stringify(o))}catch(e){}}
+  return o}
 function save(){try{localStorage.setItem("dsch1",JSON.stringify(store))}catch(e){}}
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -398,6 +403,8 @@ function render(){
   // 下段
   h+='<div class="bt">'+prodBox(p)+checkBox(p,A,B)+sideBox(p)+'</div>';
   $("sheet").innerHTML=h+'<datalist id="roster">'+store.roster.map(function(n){return'<option value="'+esc(n)+'">'}).join('')+'</datalist>';
+  var cs=JSON.stringify({staff:p.staff,bars:p.bars,ov:p.ov,note:p.note,edited:p.edited,airSig:p.airSig});
+  if(lastState&&lastDate===ds&&lastState!==cs)undoSt.push(lastState);lastState=cs;lastDate=ds;$("undo").disabled=!undoSt.length;
   curB=B;bindBars(B);bindTracks(B);bindSheet();warn(p,A);
 }
 function prodBox(p){
@@ -479,39 +486,52 @@ function timePop(x,p){var P=$("pop");
   P.innerHTML='<h4>'+esc(x.name||"この人")+'の勤務時間</h4><div class="r"><select id="tS">'+optsAll(x.s)+'</select><span>〜</span><select id="tE">'+optsAll(x.e)+'</select></div><div class="r"><button id="tC">やめる</button><button class="go" id="tO">決定</button></div>';
   P.classList.add("on");$("tC").onclick=closePop;$("tO").onclick=function(){x.s=+$("tS").value;x.e=Math.max(x.s+15,+$("tE").value);p.edited=true;closePop();changed(true)}}
 function changed(rebuild){var p=plan();if(rebuild)p.bars=null;store.wd[parseD($("date").value).getDay()]=p.staff.map(function(x){return{name:x.name,s:x.s,e:x.e,role:x.role,lead:x.lead}});save();render()}
+$("undo").onclick=function(){var u=undoSt.pop();if(!u)return;var p=plan(),o=JSON.parse(u);["staff","bars","ov","note","edited","airSig"].forEach(function(k){p[k]=o[k]});lastState=u;save();closePop();render()};
 $("reset").onclick=function(){var p=plan();p.bars=null;p.ov={};changed(true)};
 $("print").onclick=function(){sel=null;render();window.print()};
-function go(ds){$("date").value=ds;sel=null;closePop();Promise.all([fetchDay(ds),fetchAir(ds)]).then(function(){applyAir();render();fit()})}
+function go(ds){undoSt=[];lastState=null;$("date").value=ds;sel=null;closePop();Promise.all([fetchDay(ds),fetchAir(ds)]).then(function(){applyAir();render();fit()})}
 $("date").onchange=function(){go(this.value)};
 $("prev").onclick=function(){go(addD($("date").value,-1))};
 $("next").onclick=function(){go(addD($("date").value,1))};
 
 /* ---- 帯の操作：動かす・伸ばす・タップで編集 ---- */
+var LONG_MS=350;
+function dragger(el,b,B,rz){
+  var tr=el.parentNode,w=tr.getBoundingClientRect().width,per=(T1-T0)/w,os=b.s,oe=b.e,x0=null,lastX=0,lastY=0,moved=false;
+  return{start:function(x,y){x0=x;lastX=x;lastY=y;el.classList.add("lift")},
+   move:function(x,y){lastX=x;lastY=y;var d=Math.round((x-x0)*per/5)*5;if(!d&&!moved&&Math.abs(y)<0)return;if(d)moved=true;
+     if(rz){b.e=Math.max(b.s+5,Math.min(T1,oe+d))}else{var len=oe-os,st=Math.max(T0,Math.min(T1-len,os+d));b.s=st;b.e=st+len}
+     el.style.left=X(b.s)+"%";el.style.width=(X(b.e)-X(b.s))+"%";
+     if(!rz){el.style.visibility="hidden";var u=document.elementFromPoint(x,y);el.style.visibility="";var t=u&&u.closest&&u.closest(".gtrack[data-p]");if(t&&+t.dataset.p!==b.p){b.p=+t.dataset.p;moved=true;t.appendChild(el)}}},
+   end:function(){el.classList.remove("lift");if(!moved)return false;var p=plan();B.splice(B.indexOf(b),1);placeBar(B,b);p.bars=B;save();render();return true}}}
 function bindBars(B){
-  document.querySelectorAll("#sheet .bar").forEach(function(el){el.onpointerdown=function(ev){
-    ev.preventDefault();
-    var b=B[+el.dataset.i],tr=el.parentNode,w=tr.getBoundingClientRect().width,per=(T1-T0)/w,x0=ev.clientX,os=b.s,oe=b.e,rz=ev.target.classList.contains("rz"),moved=false,lastY=ev.clientY,lastX=ev.clientX;
-    function mv(e){var d=Math.round((e.clientX-x0)*per/5)*5;if(!d&&!moved)return;moved=true;
-      if(rz){b.e=Math.max(b.s+5,Math.min(T1,oe+d))}else{var len=oe-os,s=Math.max(T0,Math.min(T1-len,os+d));b.s=s;b.e=s+len}
-      el.style.left=X(b.s)+"%";el.style.width=(X(b.e)-X(b.s))+"%";lastY=e.clientY;lastX=e.clientX}
-    function up(){document.removeEventListener("pointermove",mv);document.removeEventListener("pointerup",up);
-      if(moved){var p=plan();
-        if(!rz){el.style.visibility="hidden";var u=document.elementFromPoint(lastX,lastY),t=u&&u.closest&&u.closest(".gtrack[data-p]");if(t)b.p=+t.dataset.p}
-        p.bars=B;save();render()}else openPop(b,B)}
-    document.addEventListener("pointermove",mv);document.addEventListener("pointerup",up)}})}
+  document.querySelectorAll("#sheet .bar").forEach(function(el){
+    var b=B[+el.dataset.i];
+    el.onmousedown=function(ev){ev.preventDefault();var d=dragger(el,b,B,ev.target.classList.contains("rz"));d.start(ev.clientX,ev.clientY);
+      function mv(e){d.move(e.clientX,e.clientY)}
+      function up(){document.removeEventListener("mousemove",mv);document.removeEventListener("mouseup",up);if(!d.end())openPop(b,B)}
+      document.addEventListener("mousemove",mv);document.addEventListener("mouseup",up)};
+    var d=null,tm=null,sx=0,sy=0,off=false;
+    el.addEventListener("touchstart",function(e){if(e.touches.length>1){off=true;clearTimeout(tm);return}var t=e.touches[0];sx=t.clientX;sy=t.clientY;off=false;d=null;var rz=e.target.classList.contains("rz");
+      tm=setTimeout(function(){d=dragger(el,b,B,rz);d.start(sx,sy);if(navigator.vibrate)navigator.vibrate(15)},LONG_MS)},{passive:true});
+    el.addEventListener("touchmove",function(e){var t=e.touches[0];
+      if(!d){if(Math.abs(t.clientX-sx)>8||Math.abs(t.clientY-sy)>8){off=true;clearTimeout(tm)}return}
+      e.preventDefault();d.move(t.clientX,t.clientY)},{passive:false});
+    el.addEventListener("touchend",function(e){clearTimeout(tm);if(d){e.preventDefault();d.end();d=null;return}if(!off){e.preventDefault();openPop(b,B)}});
+    el.addEventListener("touchcancel",function(){clearTimeout(tm);if(d){el.classList.remove("lift");d=null;render()}});
+  })}
 function bindTracks(B){document.querySelectorAll("#sheet .gtrack[data-p]").forEach(function(tr){tr.onclick=function(ev){if(ev.target.closest(".bar"))return;
     var r=tr.getBoundingClientRect(),t=T0+Math.round(((ev.clientX-r.left)/r.width*(T1-T0))/15)*15;t=Math.max(T0,Math.min(T1-30,t));
-    var b={p:+tr.dataset.p,s:t,e:Math.min(T1,t+60),k:"free",t:""};B.push(b);plan().bars=B;render();
-    openPop(b,B)}})}
+    openPop({p:+tr.dataset.p,s:t,e:Math.min(T1,t+60),k:"free"},B,true)}})}
 function closePop(){$("pop").classList.remove("on")}
-function openPop(b,B){var p=plan();
+function openPop(b,B,isNew){var p=plan();
   var kinds=Object.keys(KIND).map(function(k){return'<option value="'+k+'"'+(k===b.k?' selected':'')+'>'+KIND[k].t+'</option>'}).join('');
   var who=p.staff.map(function(x,i){return'<option value="'+i+'"'+(i===b.p?' selected':'')+'>'+(x.name||("担当"+(i+1)))+'</option>'}).join('');
-  var P=$("pop");P.innerHTML='<h4>この帯を直す</h4><div class="r"><select id="pK">'+kinds+'</select><input id="pT" placeholder="表示する言葉（任意）" value="'+esc(b.t||"")+'"></div><div class="r"><select id="pS">'+optsAll(b.s)+'</select><span>〜</span><select id="pE">'+optsAll(b.e)+'</select><select id="pP">'+who+'</select></div><div class="r"><button class="x" id="pD">消す</button><button id="pC">やめる</button><button class="go" id="pO">決定</button></div>';
+  var P=$("pop");P.innerHTML='<h4>'+(isNew?'帯を足す':'この帯を直す')+'</h4><div class="r"><select id="pK">'+kinds+'</select><input id="pT" placeholder="表示する言葉（任意）" value="'+esc(b.t||"")+'"></div><div class="r"><select id="pS">'+optsAll(b.s)+'</select><span>〜</span><select id="pE">'+optsAll(b.e)+'</select><select id="pP">'+who+'</select></div><div class="r">'+(isNew?'':'<button class="x" id="pD">消す</button>')+'<button id="pC">やめる</button><button class="go" id="pO">決定</button></div>';
   P.classList.add("on");
   $("pC").onclick=closePop;
-  $("pD").onclick=function(){B.splice(B.indexOf(b),1);p.bars=B;save();closePop();render()};
-  $("pO").onclick=function(){b.k=$("pK").value;b.t=$("pT").value.trim()||undefined;b.s=+$("pS").value;b.e=Math.max(b.s+5,+$("pE").value);b.p=+$("pP").value;p.bars=B;save();closePop();render()}}
+  if(!isNew)$("pD").onclick=function(){B.splice(B.indexOf(b),1);p.bars=B;save();closePop();render()};
+  $("pO").onclick=function(){b.k=$("pK").value;b.t=$("pT").value.trim()||undefined;b.s=+$("pS").value;b.e=Math.max(b.s+5,+$("pE").value);b.p=+$("pP").value;if(!isNew)B.splice(B.indexOf(b),1);placeBar(B,b);p.bars=B;save();closePop();render()}}
 function optsAll(v){var s='';for(var t=T0;t<=T1;t+=5)s+='<option value="'+t+'"'+(t===v?' selected':'')+'>'+hm(t)+'</option>';return s}
 
 /* ---- 右の作業一覧から表へ引き込む ---- */
@@ -535,7 +555,7 @@ document.querySelectorAll(".pw").forEach(function(el){el.onpointerdown=function(
   mv(ev);document.addEventListener("pointermove",mv);document.addEventListener("pointerup",up)}});
 
 /* ---- 画面に合わせて縮小表示 ---- */
-function fit(){var st=$("stage"),f=$("fit"),mm=420*96/25.4,avail=st.clientWidth-24,z=Math.min(1,avail/mm);f.style.transform="scale("+z+")";f.style.marginBottom=(-(297*96/25.4)*(1-z))+"px";f.style.marginRight=(-mm*(1-z))+"px"}
+function fit(){var st=$("stage"),f=$("fit"),mm=420*96/25.4,avail=st.clientWidth-24,z=Math.max(.5,Math.min(1,avail/mm));f.style.transform="scale("+z+")";f.style.marginBottom=(-(297*96/25.4)*(1-z))+"px";f.style.marginRight=(-mm*(1-z))+"px"}
 window.addEventListener("resize",fit);
 (function(){var n=new Date();var q=location.search.match(/d=([\d-]+)/);go(q?q[1]:ymd(n.getHours()>=12?new Date(n.getFullYear(),n.getMonth(),n.getDate()+1):n))})();
 </script>
