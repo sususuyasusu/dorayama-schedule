@@ -297,6 +297,7 @@ function mergeAir(p,sig){var old=p.staff,used=[],ppl=fromAir(),oldLead=false;
   p.staff=ppl.concat(old.filter(function(o){return o.manual&&used.indexOf(o)<0}));
   p.bars=null;p.edited=false;p.airSig=sig}
 function applyAir(){var p=plan();
+  $("status").textContent=$("status").textContent.replace(/／(エアシフト|シフトを読めません).*$/,"");
   if(!air)return false;
   if(air.failed){$("status").textContent+="／シフトを読めませんでした";return false}
   var sig=airSig(),draft=air.people.some(function(x){return x.status==="下書き"});
