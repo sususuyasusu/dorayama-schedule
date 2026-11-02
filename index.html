@@ -599,11 +599,11 @@ function openPop(b,B,isNew){var p=plan();
   closePop();if(!isNew){var me=document.querySelector('#sheet .bar[data-i="'+B.indexOf(b)+'"]');if(me){me.classList.add("editing");$("sheet").classList.add("editing")}}
   var kinds=Object.keys(KIND).map(function(k){return'<option value="'+k+'"'+(k===b.k?' selected':'')+'>'+KIND[k].t+'</option>'}).join('')+(b.k&&!KIND[b.k]?'<option value="'+b.k+'" selected>'+kindInfo(b.k).t+'</option>':'');
   var who=p.staff.map(function(x,i){return'<option value="'+i+'"'+(i===b.p?' selected':'')+'>'+(x.name||("担当"+(i+1)))+'</option>'}).join('');
-  var P=$("pop");P.innerHTML='<button class="pX" id="pC" aria-label="閉じる">×</button>'+(isNew?'<h4>帯を足す</h4>':'')+'<div class="r"><select id="pK">'+kinds+'</select><input id="pT" placeholder="表示する言葉（任意）" value="'+esc(b.t||"")+'"></div><div class="r"><select id="pS">'+optsAll(b.s)+'</select><span>〜</span><select id="pE">'+optsAll(b.e)+'</select><select id="pP">'+who+'</select></div><div class="r">'+(isNew?'':'<button class="x" id="pD">消す</button>')+'<button class="go" id="pO">'+(isNew?'決定':'変更')+'</button>'+(isNew?'':'<button class="go" id="pN" hidden>追加</button>')+'</div>';
+  var P=$("pop");P.innerHTML='<button class="pX" id="pC" aria-label="閉じる">×</button>'+(isNew?'<h4>帯を足す</h4>':'')+'<div class="r"><select id="pK">'+kinds+'</select></div><div class="r"><select id="pS">'+optsAll(b.s)+'</select><span>〜</span><select id="pE">'+optsAll(b.e)+'</select><select id="pP">'+who+'</select></div><div class="r">'+(isNew?'':'<button class="x" id="pD">消す</button>')+'<button class="go" id="pO">'+(isNew?'決定':'変更')+'</button>'+(isNew?'':'<button class="go" id="pN" hidden>追加</button>')+'</div>';
   P.classList.add("on");
   $("pC").onclick=closePop;
     if(!isNew)$("pD").onclick=function(){B.splice(B.indexOf(b),1);p.bars=B;save();closePop();render()};
-  function val(o){o.k=$("pK").value;o.t=$("pT").value.trim()||undefined;o.s=+$("pS").value;o.e=Math.max(o.s+5,+$("pE").value);o.p=+$("pP").value;return o}
+  function val(o){o.k=$("pK").value;delete o.t;o.s=+$("pS").value;o.e=Math.max(o.s+5,+$("pE").value);o.p=+$("pP").value;return o}
   $("pO").onclick=function(){val(b);if(!isNew)B.splice(B.indexOf(b),1);placeBar(B,b);p.bars=B;save();closePop();render()};
   if(!isNew){var k0=b.k;$("pK").onchange=function(){$("pN").hidden=$("pK").value===k0};
     $("pN").onclick=function(){placeBar(B,val({}));p.bars=B;save();closePop();render()}}}
