@@ -123,10 +123,12 @@ table{border-collapse:collapse;width:100%}
 .gname{position:relative}
 .rl{display:inline-block;border:.3mm solid #1d5b37;color:#1d5b37;font-size:9pt;font-weight:700;border-radius:.8mm;padding:0 1.2mm;margin-left:1.2mm;cursor:pointer}
 .np{font:inherit;cursor:pointer}
-.rmv{position:absolute;right:.6mm;top:.5mm;width:5mm;height:5mm;border:0;background:none;color:#999;font-size:11pt;line-height:1;padding:0;opacity:0}
+.rmv{position:absolute;right:.6mm;bottom:.5mm;width:5mm;height:5mm;border:0;background:none;color:#999;font-size:11pt;line-height:1;padding:0;opacity:0}
 .grow:hover .rmv{opacity:1}
 .addp{border:.3mm solid #1d5b37;background:#fff;color:#1d5b37;border-radius:.8mm;font-size:9pt;font-weight:700;padding:.2mm 1.5mm;margin-left:1.5mm}
-.mklead{border:.3mm dashed #999;background:none;color:#777;border-radius:.8mm;font-size:8pt;padding:0 1mm;margin-left:1mm;opacity:0}
+.mklead{position:absolute;right:.6mm;top:.5mm;border:.3mm dashed #999;background:none;color:#777;border-radius:.8mm;font-size:8pt;padding:0 1mm;opacity:0}
+.gname .lk{position:absolute;right:.6mm;top:.5mm;margin:0}
+.ghead .gname{flex-direction:row;align-items:center;white-space:nowrap}
 .grow:hover .mklead{opacity:1}
 .hnote.empty{color:#999;font-weight:500;font-size:11pt;border-left-color:#ccc}
 .gtrack[data-p]{cursor:copy}
@@ -373,7 +375,7 @@ function render(){
     var bs=B.filter(function(b){return b.p===i}).map(function(b){var w=b.e-b.s,cl=w<=15?"xs":w<45?"s":"",K=KIND[b.k]||KIND.free,lab=b.t||K.t;
       var si=w>=25?'<small>〜'+hm(b.e)+'</small>':'';
       return'<div class="bar '+K.c+' '+cl+(sel===b?' sel':'')+'" data-i="'+B.indexOf(b)+'" style="left:'+X(b.s)+'%;width:'+(X(b.e)-X(b.s))+'%"><b>'+esc(lab)+'</b>'+si+'<div class="rz"></div></div>'}).join('');
-    return'<div class="grow"><div class="gname" data-i="'+i+'"><button class="rmv np" data-a="del" title="外す">×</button><b class="ed" data-a="name">'+(x.name?esc(x.name):'<span class="blank"></span>')+'</b><em><span class="ed" data-a="time">'+hm(x.s)+'〜'+hm(x.e)+'</span>'+(x.lead?'<span class="lk ed" data-a="lead">責任者</span>':'<button class="mklead np" data-a="lead">責任者に</button>')+'<span class="rl" data-a="role">'+ROLE_N[x.role]+'</span></em></div><div class="gtrack" data-p="'+i+'">'+gr+bs+'</div></div>'}).join('');
+    return'<div class="grow"><div class="gname" data-i="'+i+'"><button class="rmv np" data-a="del" title="外す">×</button><b class="ed" data-a="name"'+(x.name.length>4?' style="font-size:13.5pt"':'')+'>'+(x.name?esc(x.name):'<span class="blank"></span>')+'</b><em><span class="ed" data-a="time">'+hm(x.s)+'〜'+hm(x.e)+'</span>'+(x.lead?'<span class="lk ed" data-a="lead">責任者</span>':'<button class="mklead np" data-a="lead">責任者に</button>')+'<span class="rl" data-a="role">'+ROLE_N[x.role]+'</span></em></div><div class="gtrack" data-p="'+i+'">'+gr+bs+'</div></div>'}).join('');
   h+='<div class="gantt"><div class="grow ghead"><div class="gname">名前／勤務<button class="addp np" id="addP">＋人</button></div><div class="gtrack">'+gr+tk+'</div></div>'+
      '<div class="grow gpace"><div class="gname"><b>生地ペース</b><em>上＝目標／下＝実際を記入</em></div><div class="gtrack">'+gr+pc+'</div></div>'+
      '<div class="grows">'+rows+'</div></div>';
