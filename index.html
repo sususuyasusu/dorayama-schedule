@@ -415,7 +415,7 @@ function render(){
   for(var t=T0;t<=T1;t+=15){if(t>T0&&t<T1)gr+='<div class="grid '+(t%60===0?'h':t%30===0?'m':'')+'" style="left:'+X(t)+'%"></div>'}
   for(t=T0;t<T1;t+=60){tk+='<span class="tick" style="left:'+X(t)+'%">'+hm(t).replace(":00","時")+'</span>'}
   var pc='';
-  for(t=A.gS+30-(A.gS%30);t<=A.gE;t+=30){var n=Math.min(A.rot,Math.floor((t-A.gS)/A.pace+.001));pc+='<div class="pc" style="left:'+X(t)+'%"><b>'+n+'回転</b><i></i></div>'}
+  for(t=A.gS+30-(A.gS%30);t<=A.gE;t+=30){if(A.gE%30&&A.gE-t<20)continue;var n=Math.min(A.rot,Math.floor((t-A.gS)/A.pace+.001));pc+='<div class="pc" style="left:'+X(t)+'%"><b>'+n+'回転</b><i></i></div>'}
   if(A.gE%30)pc+='<div class="pc" style="left:'+X(A.gE)+'%"><b>'+A.reach+'回転</b><i></i></div>';
   var rows=p.staff.map(function(x,i){
     var mine=B.filter(function(b){return b.p===i}),LN=layLanes(mine);
