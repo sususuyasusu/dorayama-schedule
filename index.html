@@ -573,8 +573,9 @@ document.querySelectorAll(".pw").forEach(function(el){el.onpointerdown=function(
   mv(ev);document.addEventListener("pointermove",mv);document.addEventListener("pointerup",up)}});
 
 /* ---- 画面に合わせて縮小表示 ---- */
-function fit(){var st=$("stage"),f=$("fit"),mm=420*96/25.4,avail=st.clientWidth-24,z=Math.max(.5,Math.min(1,avail/mm));f.style.transform="scale("+z+")";f.style.marginBottom=(-(297*96/25.4)*(1-z))+"px";f.style.marginRight=(-mm*(1-z))+"px"}
+function fit(){var st=$("stage"),f=$("fit"),mm=420*96/25.4,avail=st.clientWidth-24,z=Math.max(innerWidth>innerHeight?.2:.5,Math.min(1,avail/mm));f.style.transform="scale("+z+")";f.style.marginBottom=(-(297*96/25.4)*(1-z))+"px";f.style.marginRight=(-mm*(1-z))+"px"}
 window.addEventListener("resize",fit);
+window.addEventListener("orientationchange",function(){setTimeout(fit,300)});
 (function(){var n=new Date();var q=location.search.match(/d=([\d-]+)/);go(q?q[1]:ymd(n.getHours()>=12?new Date(n.getFullYear(),n.getMonth(),n.getDate()+1):n))})();
 </script>
 </body>
