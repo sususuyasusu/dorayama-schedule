@@ -469,7 +469,6 @@ function warn(p,A){
     if(work>need*1.2)L.push('<li>'+esc(msg+"余裕があるので早上がりの候補があります")+'</li>');
     else if(work<need*.9)bad(msg+"人手が足りない見込みです");
     else ok(msg+"ちょうど良い配置です")}
-  if(p.bars)L.push('<li>帯を手で直した状態です</li>');
   $("warn").innerHTML=L.join('');
 }
 
