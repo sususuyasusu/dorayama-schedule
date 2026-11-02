@@ -588,11 +588,10 @@ function closePop(){$("pop").classList.remove("on")}
 function openPop(b,B,isNew){var p=plan();
   var kinds=Object.keys(KIND).map(function(k){return'<option value="'+k+'"'+(k===b.k?' selected':'')+'>'+KIND[k].t+'</option>'}).join('')+(b.k&&!KIND[b.k]?'<option value="'+b.k+'" selected>'+kindInfo(b.k).t+'</option>':'');
   var who=p.staff.map(function(x,i){return'<option value="'+i+'"'+(i===b.p?' selected':'')+'>'+(x.name||("担当"+(i+1)))+'</option>'}).join('');
-  var P=$("pop");P.innerHTML='<h4>'+(isNew?'帯を足す':'この帯を直す')+'</h4><div class="r"><select id="pK">'+kinds+'</select><input id="pT" placeholder="表示する言葉（任意）" value="'+esc(b.t||"")+'"></div><div class="r"><select id="pS">'+optsAll(b.s)+'</select><span>〜</span><select id="pE">'+optsAll(b.e)+'</select><select id="pP">'+who+'</select></div><div class="r">'+(isNew?'':'<button class="x" id="pD">消す</button><button id="pA">同じ時間に足す</button>')+'<button id="pC">やめる</button><button class="go" id="pO">決定</button></div>';
+  var P=$("pop");P.innerHTML='<h4>'+(isNew?'帯を足す':'この帯を直す')+'</h4><div class="r"><select id="pK">'+kinds+'</select><input id="pT" placeholder="表示する言葉（任意）" value="'+esc(b.t||"")+'"></div><div class="r"><select id="pS">'+optsAll(b.s)+'</select><span>〜</span><select id="pE">'+optsAll(b.e)+'</select><select id="pP">'+who+'</select></div><div class="r">'+(isNew?'':'<button class="x" id="pD">消す</button>')+'<button id="pC">やめる</button><button class="go" id="pO">決定</button></div>';
   P.classList.add("on");
   $("pC").onclick=closePop;
-  if(!isNew)$("pA").onclick=function(){openPop({p:b.p,s:b.s,e:b.e,k:"free"},B,true)};
-  if(!isNew)$("pD").onclick=function(){B.splice(B.indexOf(b),1);p.bars=B;save();closePop();render()};
+    if(!isNew)$("pD").onclick=function(){B.splice(B.indexOf(b),1);p.bars=B;save();closePop();render()};
   $("pO").onclick=function(){b.k=$("pK").value;b.t=$("pT").value.trim()||undefined;b.s=+$("pS").value;b.e=Math.max(b.s+5,+$("pE").value);b.p=+$("pP").value;if(!isNew)B.splice(B.indexOf(b),1);placeBar(B,b);p.bars=B;save();closePop();render()}}
 function optsAll(v){var s='';for(var t=T0;t<=T1;t+=5)s+='<option value="'+t+'"'+(t===v?' selected':'')+'>'+hm(t)+'</option>';return s}
 
