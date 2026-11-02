@@ -178,7 +178,8 @@ table{border-collapse:collapse;width:100%}
     <button class="ib" id="next" aria-label="次の日"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     <div class="status" id="status"></div>
     
-    <button class="sub" id="undo" disabled>元に戻す</button>
+    <button class="sub" id="undo" disabled>戻る</button>
+    <button class="sub" id="redo" disabled>進む</button>
     <button class="sub" id="reset">組み直す</button>
     <button class="print" id="print">A3で印刷</button>
   </header>
@@ -206,7 +207,7 @@ var S={};
 var store=load();
 var cache={};
 var cur={rot:0,kaiten:0,storeN:0,eventN:0,tomorrow:null,blocks:[],ok:false};
-var sel=null,undoSt=[],lastState=null,lastDate=null;
+var sel=null,undoSt=[],redoSt=[],lastState=null,lastDate=null;
 
 function load(){try{var o=JSON.parse(localStorage.getItem("dsch1"))||{};}catch(e){var o={}}o.plans=o.plans||{};o.wd=o.wd||{};o.roster=o.roster||[];o.roleOf=o.roleOf||{};o.role2Of=o.role2Of||{};delete o.code;
   if(o.v===2){Object.keys(o.plans).forEach(function(k){o.plans[k].airSig=null});o.v=3;try{localStorage.setItem("dsch1",JSON.stringify(o))}catch(e){}}
@@ -414,7 +415,7 @@ function render(){
   h+='<div class="bt">'+prodBox(p)+checkBox(p,A,B)+sideBox(p)+'</div>';
   $("sheet").innerHTML=h+'<datalist id="roster">'+store.roster.map(function(n){return'<option value="'+esc(n)+'">'}).join('')+'</datalist>';
   var cs=JSON.stringify({staff:p.staff,bars:p.bars,ov:p.ov,note:p.note,edited:p.edited,airSig:p.airSig});
-  if(lastState&&lastDate===ds&&lastState!==cs)undoSt.push(lastState);lastState=cs;lastDate=ds;$("undo").disabled=!undoSt.length;
+  if(lastState&&lastDate===ds&&lastState!==cs){undoSt.push(lastState);redoSt=[]}lastState=cs;lastDate=ds;$("undo").disabled=!undoSt.length;$("redo").disabled=!redoSt.length;
   curB=B;bindBars(B);bindTracks(B);bindSheet();warn(p,A);
 }
 function prodBox(p){
@@ -501,10 +502,12 @@ function timePop(x,p){var P=$("pop");
   P.innerHTML='<h4>'+esc(x.name||"この人")+'の勤務時間</h4><div class="r"><select id="tS">'+optsAll(x.s)+'</select><span>〜</span><select id="tE">'+optsAll(x.e)+'</select></div><div class="r"><button id="tC">やめる</button><button class="go" id="tO">決定</button></div>';
   P.classList.add("on");$("tC").onclick=closePop;$("tO").onclick=function(){x.s=+$("tS").value;x.e=Math.max(x.s+15,+$("tE").value);p.edited=true;closePop();changed(true)}}
 function changed(rebuild){var p=plan();if(rebuild)p.bars=null;store.wd[parseD($("date").value).getDay()]=p.staff.map(function(x){return{name:x.name,s:x.s,e:x.e,role:x.role,lead:x.lead}});save();render()}
-$("undo").onclick=function(){var u=undoSt.pop();if(!u)return;var p=plan(),o=JSON.parse(u);["staff","bars","ov","note","edited","airSig"].forEach(function(k){p[k]=o[k]});lastState=u;save();closePop();render()};
+function restore(u){var p=plan(),o=JSON.parse(u);["staff","bars","ov","note","edited","airSig"].forEach(function(k){p[k]=o[k]});lastState=u;save();closePop();render()}
+$("undo").onclick=function(){var u=undoSt.pop();if(!u)return;redoSt.push(lastState);restore(u)};
+$("redo").onclick=function(){var u=redoSt.pop();if(!u)return;undoSt.push(lastState);restore(u)};
 $("reset").onclick=function(){var p=plan();p.bars=null;p.ov={};changed(true)};
 $("print").onclick=function(){sel=null;render();window.print()};
-function go(ds){undoSt=[];lastState=null;$("date").value=ds;sel=null;closePop();Promise.all([fetchDay(ds),fetchAir(ds)]).then(function(){applyAir();render();fit()})}
+function go(ds){undoSt=[];redoSt=[];lastState=null;$("date").value=ds;sel=null;closePop();Promise.all([fetchDay(ds),fetchAir(ds)]).then(function(){applyAir();render();fit()})}
 $("date").onchange=function(){go(this.value)};
 $("prev").onclick=function(){go(addD($("date").value,-1))};
 $("next").onclick=function(){go(addD($("date").value,1))};
