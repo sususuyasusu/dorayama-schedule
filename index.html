@@ -15,6 +15,8 @@ body{font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;color:var
 button,input,select,textarea{font:inherit;color:inherit}
 .app{display:flex;flex-direction:column;height:100vh}
 .top,.warn{background:var(--g)}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 .top{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:8px 12px;color:var(--cream)}
 .top>img{height:26px;margin-right:4px}
 .top input[type=date]{height:38px;border:0;border-radius:9px;padding:0 8px;background:#fff;color:var(--ink);font-weight:700}
@@ -561,6 +563,8 @@ $("next").onclick=function(){go(addD($("date").value,1))};
 
 /* ---- 帯の操作：動かす・伸ばす・タップで編集 ---- */
 var LONG_MS=350;
+document.addEventListener("selectstart",function(e){var t=e.target;if(!(t.closest&&t.closest("input,textarea")))e.preventDefault()});
+document.addEventListener("contextmenu",function(e){var t=e.target;if(t.closest&&t.closest("#sheet"))e.preventDefault()});
 function rzOf(t){return t.classList.contains("rzl")?"l":t.classList.contains("rz")?"r":false}
 function dragger(el,b,B,rz){
   var tr=el.parentNode,w=tr.getBoundingClientRect().width,per=(T1-T0)/w,os=b.s,oe=b.e,x0=null,lastX=0,lastY=0,moved=false;
