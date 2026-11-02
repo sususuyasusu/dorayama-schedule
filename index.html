@@ -210,6 +210,7 @@ var cache={};
 var cur={rot:0,kaiten:0,storeN:0,eventN:0,tomorrow:null,blocks:[],ok:false};
 var sel=null,undoSt=[],redoSt=[],lastState=null,lastDate=null;
 
+var PJ=null;try{var pjm=location.hash.match(/^#printplan=(.+)$/);if(pjm)PJ=JSON.parse(decodeURIComponent(escape(atob(pjm[1].replace(/-/g,"+").replace(/_/g,"/")))))}catch(e){}
 function load(){try{var o=JSON.parse(localStorage.getItem("dsch1"))||{};}catch(e){var o={}}o.plans=o.plans||{};o.wd=o.wd||{};o.roster=o.roster||[];o.roleOf=o.roleOf||{};o.role2Of=o.role2Of||{};delete o.code;
   if(o.v===2){Object.keys(o.plans).forEach(function(k){o.plans[k].airSig=null});o.v=3;try{localStorage.setItem("dsch1",JSON.stringify(o))}catch(e){}}
   if(o.v!==2&&o.v!==3){Object.keys(o.plans).forEach(function(k){o.plans[k].bars=null});o.v=3;try{localStorage.setItem("dsch1",JSON.stringify(o))}catch(e){}}
@@ -315,7 +316,7 @@ function defaults(){return[
  {name:"",s:510,e:960,role:"reji"},
  {name:"",s:540,e:900,role:"make"},
  {name:"",s:600,e:960,role:"make"}]}
-function plan(){var ds=$("date").value,p=store.plans[ds];
+function plan(){if(PJ)return PJ.plan;var ds=$("date").value,p=store.plans[ds];
   if(!p){p=store.plans[ds]={staff:defaults(),note:"",bars:null,ov:{}}}
   return p}
 function rotVal(p){return p.ov&&p.ov.rot!=null&&p.ov.rot!==""?num(p.ov.rot):cur.rot}
@@ -522,8 +523,20 @@ function restore(u){var p=plan(),o=JSON.parse(u);["staff","bars","ov","note","ed
 $("undo").onclick=function(){var u=undoSt.pop();if(!u)return;redoSt.push(lastState);restore(u)};
 $("redo").onclick=function(){var u=redoSt.pop();if(!u)return;undoSt.push(lastState);restore(u)};
 $("reset").onclick=function(){var p=plan();p.ov={};if(air&&air.people&&air.people.length)mergeAir(p,airSig());else p.staff=p.staff.filter(function(x){return x.manual}).concat(defaults());p.bars=null;changed(true)};
-$("print").onclick=function(){sel=null;render();window.print()};
-function go(ds){undoSt=[];redoSt=[];lastState=null;$("date").value=ds;sel=null;closePop();Promise.all([fetchDay(ds),fetchAir(ds)]).then(function(){applyAir();render();fit()})}
+var PRINT_API="https://dorayama-seizo-app-1.onrender.com/api/print-request";
+function printPost(o){return fetch(PRINT_API,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(o)}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||"err");return j})})}
+$("print").onclick=function(){var b=$("print"),p=plan(),ds=$("date").value;sel=null;render();
+  function done(t){b.textContent=t;setTimeout(function(){b.textContent="A3で印刷";b.disabled=false},6000)}
+  function fail(m){done("A3で印刷");if(confirm("複合機へ送れませんでした（"+m+"）。この端末から印刷しますか？"))window.print()}
+  b.disabled=true;b.textContent="送っています…";
+  printPost({date:ds,body:{date:ds,plan:{staff:p.staff,bars:p.bars,ov:p.ov,note:p.note},cur:cur}}).then(function(j){var n=0;b.textContent="印刷の順番待ち…";
+    (function poll(){setTimeout(function(){printPost({id:j.id}).then(function(s){
+      if(s.status==="印刷済み")return done("複合機へ送りました");
+      if(s.status.indexOf("失敗")===0||s.status==="上限"||s.status==="期限切れ")return fail(s.note||s.status);
+      if(++n>40)return fail("Mac miniから応答がありません");poll()}).catch(function(){if(++n>40)return fail("通信できません");poll()})},5000)})()
+  }).catch(function(e){fail(e.message)})};
+function go(ds){if(PJ){cur=PJ.cur;$("date").value=PJ.date;render();fit();return}
+  undoSt=[];redoSt=[];lastState=null;$("date").value=ds;sel=null;closePop();Promise.all([fetchDay(ds),fetchAir(ds)]).then(function(){applyAir();render();fit()})}
 $("date").onchange=function(){go(this.value)};
 $("prev").onclick=function(){go(addD($("date").value,-1))};
 $("next").onclick=function(){go(addD($("date").value,1))};
