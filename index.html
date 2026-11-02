@@ -166,6 +166,8 @@ table{border-collapse:collapse;width:100%}
 .pop input,.pop select{height:40px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:0 8px;min-width:0;flex:1}
 .pop button{height:40px;border:0;border-radius:9px;padding:0 10px;cursor:pointer;background:#fff;border:1px solid var(--line);white-space:nowrap;flex:none}
 .pop .r:last-child{flex-wrap:wrap}
+.pop .wk{flex:1.4}
+.pop select{padding:0 4px}
 .pop .go{background:var(--g);color:#fff;border-color:var(--g);font-weight:700;flex:1}
 .pop .x{color:#a42b0d}
 @media print{
@@ -599,7 +601,7 @@ function openPop(b,B,isNew){var p=plan();
   closePop();if(!isNew){var me=document.querySelector('#sheet .bar[data-i="'+B.indexOf(b)+'"]');if(me){me.classList.add("editing");$("sheet").classList.add("editing")}}
   var kinds=Object.keys(KIND).map(function(k){return'<option value="'+k+'"'+(k===b.k?' selected':'')+'>'+KIND[k].t+'</option>'}).join('')+(b.k&&!KIND[b.k]?'<option value="'+b.k+'" selected>'+kindInfo(b.k).t+'</option>':'');
   var who=p.staff.map(function(x,i){return'<option value="'+i+'"'+(i===b.p?' selected':'')+'>'+(x.name||("担当"+(i+1)))+'</option>'}).join('');
-  var P=$("pop");P.innerHTML='<button class="pX" id="pC" aria-label="閉じる">×</button>'+(isNew?'<h4>帯を足す</h4>':'')+'<div class="r"><select id="pK">'+kinds+'</select></div><div class="r"><select id="pS">'+optsAll(b.s)+'</select><span>〜</span><select id="pE">'+optsAll(b.e)+'</select><select id="pP">'+who+'</select></div><div class="r">'+(isNew?'':'<button class="x" id="pD">消す</button>')+'<button class="go" id="pO">'+(isNew?'決定':'変更')+'</button>'+(isNew?'':'<button class="go" id="pN" hidden>追加</button>')+'</div>';
+  var P=$("pop");P.innerHTML='<button class="pX" id="pC" aria-label="閉じる">×</button>'+(isNew?'<h4>帯を足す</h4>':'')+'<div class="r"><select id="pK" class="wk">'+kinds+'</select><select id="pS">'+optsAll(b.s)+'</select><span>〜</span><select id="pE">'+optsAll(b.e)+'</select></div><div class="r"><select id="pP" class="wk">'+who+'</select>'+(isNew?'':'<button class="x" id="pD">消す</button>')+'<button class="go" id="pO">'+(isNew?'決定':'変更')+'</button>'+(isNew?'':'<button class="go" id="pN" hidden>追加</button>')+'</div>';
   P.classList.add("on");
   $("pC").onclick=closePop;
     if(!isNew)$("pD").onclick=function(){B.splice(B.indexOf(b),1);p.bars=B;save();closePop();render()};
