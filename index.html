@@ -436,7 +436,7 @@ function lastEnd(B,k){var e=0;B.forEach(function(b){if(b.k.split("+").indexOf(k)
 function checkBox(p,A,B){
   var L=[];
   function add(t,x){if(t)L.push({t:t,x:x})}
-  add(lastEnd(B,"mise"),"店売り作成 完了 "+stVal(p)+"個");
+  add(lastEnd(B,"mise"),miseDone(p,B)===null?"店売り作成 ※この帯では"+stVal(p)+"個に届かない":"店売り作成 完了 "+stVal(p)+"個");
   add(CONF.open,"補充・開店準備→開店");
   add(lastEnd(B,"kiji"),"生地 終了 "+A.rot+"回転");
   add(lastEnd(B,"yaki"),"皮 焼き終わり→清掃");
@@ -454,6 +454,9 @@ function sideBox(p){
   return'<div class="box" style="gap:1.2mm"><h3>明日の準備</h3>'+b+'<h3 style="margin-top:1mm">全員のルール</h3><ul class="rule"><li>自分の<b>行だけ</b>見て動く。帯が終わったら<b>次の帯へすぐ</b>移る</li><li>早く終わったら<b>責任者に一声</b>→遅れている作業へ</li><li>生地は<b>'+hm(CONF.stopKiji)+'でストップ</b>／遅れたら<b>店売りが優先</b></li><li>数は自己判断で減らさない。変えるときは先に確認</li></ul>'+'</div>'}
 
 /* ---- 点検 ---- */
+function miseDone(p,B){var need=stVal(p)/CONF.rate*60,got=0;
+  for(var t=T0;t<T1;t+=5){got+=5*B.filter(function(b){return String(b.k).split("+").indexOf("mise")>=0&&b.s<=t&&b.e>t}).length;if(got>=need)return t+5}
+  return null}
 function warn(p,A){
   var L=[],st=p.staff,c=CONF;
   function bad(s){L.push('<li class="bad">'+esc(s)+'</li>')}
@@ -466,8 +469,7 @@ function warn(p,A){
   if(!st.some(function(x){return x.lead}))bad("責任者を星印で選んでください");
   if(!A.rot)bad("回転数が0です");
   if(A.pace<c.pace)bad("1回転"+Math.round(A.pace*10)/10+"分のペースが必要です。"+hm(c.stopKiji)+"に間に合わせるのが厳しい日です（生地の人を増やす／作成数を調整）");
-  var needM=stVal(p)/c.rate*60,got=0,doneT=null;
-  for(var t=T0;t<T1&&doneT===null;t+=5){got+=5*curB.filter(function(b){return String(b.k).split("+").indexOf("mise")>=0&&b.s<=t&&b.e>t}).length;if(got>=needM)doneT=t+5}
+  var needM=stVal(p)/c.rate*60,doneT=miseDone(p,curB);
   if(needM&&(doneT===null||doneT>A.mEnd))bad("店売り作成が開店前の"+hm(A.mEnd)+"に終わりません。"+stVal(p)+"個に約"+Math.ceil(needM)+"分（1人1時間"+c.rate+"個の推定）かかり、今の帯だと"+(doneT===null?"終わりません":hm(doneT)+"までかかります")+"（朝の人を増やす／帯を足す）");
   if(A.eShort||A.eE>c.zaiko)bad("催事作成が"+hm(c.zaiko)+"までに終わりません（人を足すか帯を調整）");
   var work=st.reduce(function(s,x,i){var b=A.brk[i];return s+(x.e-x.s-(b?b.e-b.s:0))},0)/60,need=(stVal(p)+evVal(p))/c.hourlyRef;
