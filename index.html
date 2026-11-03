@@ -419,7 +419,7 @@ function kindAt(x,i,t,A){
     if(j===1&&t<c2.pmStart+15)return"kata"}
   var cv=A.cover[i];if(cv&&t>=cv.s&&t<cv.e)return"cov";
   var k1=kindOf(x.role,t,A);if(!x.role2||x.role2===x.role)return k1;
-  var k2=kindOf(x.role2,t,A);if(k1===k2)return k1;
+  var k2=kindOf(x.role2,t,A);if(!k2||k1===k2)return k1;if(!k1)return k2;
   var g1=GENERIC.indexOf(k1)>=0,g2=GENERIC.indexOf(k2)>=0;
   return g1&&!g2?k2:g2&&!g1?k1:g1?k1:k1+"+"+k2}
 var GENERIC=["jun","yjun","sai","shik","zai","kata"];
@@ -435,8 +435,7 @@ function kindOf(role,t,A){var c=CONF;
   if(role==="yaki"){if(t<A.yS)return"yjun";if(t<A.yE)return"yaki";if(t<A.yE+c.kataYaki)return"ykat"}
   if(role==="make"){if(t>=c.open-15&&t<c.open)return"open";if(t<A.mS)return"jun";if(t<A.mDone)return"mise"}
   if(t<A.eE)return"sai";
-  if(t<c.pmStart)return"shik";
-  return"free"}
+  return null}
 function buildBars(p,A){var out=[];
   p.staff.forEach(function(x,i){var t=x.s,k=null,s=t,lim=Math.min(x.e,CONF.close);
     for(;t<=lim;t+=5){var n=t<lim?kindAt(x,i,t,A):null;
