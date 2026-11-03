@@ -79,6 +79,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;b
 .big span{display:block;font-size:9.5pt;color:#333;font-weight:500}
 .big b{font-size:24pt;font-weight:900;line-height:1.05}
 .big b i{font-size:11pt;font-style:normal;font-weight:700;margin-left:.5mm}
+.big .labr{border-color:#1f6fb2;background:#eef5fb}.big .labr.neg{border-color:#c8372d;background:#fdeceb}.big .labr.neg b{color:#c8372d}
 .big .lead{min-width:48mm}.big .lead b{font-size:17pt;line-height:1.5}
 .gantt{flex:1;min-height:0;display:flex;flex-direction:column;border:.3mm solid #aaa;--nw:43mm}
 .grow{display:flex;position:relative}
@@ -412,7 +413,8 @@ function buildBars(p,A){var out=[];
     if(nx&&nx.k!=="kyu"){nx.s=b.s;out.splice(j,1)}else if(pv&&pv.k!=="kyu"){pv.e=b.e;out.splice(j,1)}}
   var sp=[];out.forEach(function(b){String(b.k).split("+").forEach(function(k){sp.push({p:b.p,s:b.s,e:b.e,k:k})})});
   var mg=[];sp.forEach(function(b){var o=mg.filter(function(y){return y.p===b.p&&y.k===b.k&&y.e===b.s})[0];if(o)o.e=b.e;else mg.push(b)});
-  return mg}
+  var q=[];mg.forEach(function(b){var s=Math.round(b.s/15)*15,e=Math.round(b.e/15)*15;if(e<=s)return;var o=q.filter(function(y){return y.p===b.p&&y.k===b.k&&y.e===s})[0];if(o)o.e=e;else q.push({p:b.p,s:s,e:e,k:b.k})});
+  return q}
 function bars(p,A){return p.bars||buildBars(p,A)}
 
 /* ---- 紙を描く ---- */
@@ -427,9 +429,9 @@ function render(){
   var lead=p.staff.filter(function(x){return x.lead})[0];
   var h='<div class="hd"><div><div class="ttl">門仲どらやき どら山｜当日の時間割</div><div class="d">'+(d.getMonth()+1)+'/'+d.getDate()+'<small>（'+WD[d.getDay()]+'）</small></div></div>'+(p.note?'<div class="hnote ed" id="noteEd"><span>責任者からひとこと</span>'+esc(p.note)+'</div>':'<div class="hnote empty ed np" id="noteEd">ここをタップしてひとことを書く</div>')+
    '<div class="big"><div class="ed" data-ov="rot"><span>回転数</span><b>'+(cur.kaiten&&!(p.ov&&p.ov.rot)?cur.kaiten:rotVal(p))+'</b></div><div class="ed" data-ov="store"><span>店売り</span><b>'+stVal(p)+'<i>個</i></b></div><div class="ed" data-ov="event"><span>催事</span><b>'+evVal(p)+'<i>個</i></b></div>'+
-   '<div><span>生地STOP</span><b>'+hm(CONF.stopKiji)+'</b></div><div><span>焼きSTOP</span><b>'+hm(CONF.stopYaki)+'</b></div><div><span>開店</span><b>'+hm(CONF.open)+'</b></div><div class="lead"><span>今日の責任者</span><b>'+(lead&&lead.name?esc(lead.name):'&nbsp;')+'</b></div></div></div>';
+   '<div><span>生地STOP</span><b>'+hm(CONF.stopKiji)+'</b></div><div><span>焼きSTOP</span><b>'+hm(CONF.stopYaki)+'</b></div><div><span>開店</span><b>'+hm(CONF.open)+'</b></div>'+(function(){var lb=laborCalc(p);if(!lb)return'';return'<div class="labr'+(lb.gap<0?' neg':'')+'"><span>人件費 '+(lb.gap>=0?'余り':'不足')+'（約'+Math.abs(lb.gapH)+'時間）</span><b>'+Math.round(Math.abs(lb.gap)).toLocaleString("ja-JP")+'<i>円</i></b></div>'})()+'<div class="lead"><span>今日の責任者</span><b>'+(lead&&lead.name?esc(lead.name):'&nbsp;')+'</b></div></div></div>';
   // 時間割
-  var gr='',tk='',MK=[[CONF.open,"開店","#1f8a4c"],[CONF.stopKiji,"生地STOP","#e07b12"],[CONF.stopYaki,"焼きSTOP","#c8372d"],[CONF.saiEnd,"催事作成終了","#1f6fb2"],[CONF.close,"閉店","#6a3fa0"]];
+  var gr='',tk='',MK=[[CONF.open,"開店","#1f8a4c"],[CONF.stopKiji,"生地STOP","#e07b12"],[CONF.stopYaki,"焼きSTOP","#c8372d"],[CONF.saiEnd,"催事作成STOP","#1f6fb2"],[CONF.close,"閉店","#6a3fa0"]];
   var mk=MK.map(function(m){return'<div class="mk" style="left:'+X(m[0])+'%;border-color:'+m[2]+'"></div>'}).join('');
   var mkL=MK.map(function(m){return'<span class="mkl" style="left:'+X(m[0])+'%;background:'+m[2]+'">'+m[1]+'</span>'}).join('');
   for(var t=T0;t<=T1;t+=15){if(t>T0&&t<T1)gr+='<div class="grid '+(t%60===0?'h':t%30===0?'m':'')+'" style="left:'+X(t)+'%"></div>'}
@@ -488,6 +490,13 @@ function sideBox(p){
 function miseDone(p,B){var need=stVal(p)/CONF.rate*60,got=0;
   for(var t=T0;t<T1;t+=5){got+=5*B.filter(function(b){return String(b.k).split("+").indexOf("mise")>=0&&b.s<=t&&b.e>t}).length;if(got>=need)return t+5}
   return null}
+function yen(v){return Math.round(v).toLocaleString("ja-JP")+"円"}
+function laborCalc(p){var L=air&&air.labor;if(!L||!L.unitValue||L.storeSalesForecast==null)return null;
+  var pieces=cur.total||stVal(p)+evVal(p);if(!pieces)return null;
+  var cap=pieces*L.unitValue*L.rateProduction/100+L.storeSalesForecast*L.rateStoreSales/100;
+  var mins=p.staff.reduce(function(s,x,i){var k=curB.filter(function(b){return b.p===i&&b.k==="kyu"}).reduce(function(a,b){return a+b.e-b.s},0);return s+Math.max(0,x.e-x.s-k)},0);
+  var plan=mins/60*L.hourlyWage,gap=cap-plan;
+  return{cap:cap,plan:plan,gap:gap,gapH:Math.round(gap/L.hourlyWage*10)/10,hours:Math.round(mins/6)/10,wage:L.hourlyWage,rp:L.rateProduction,rs:L.rateStoreSales,sales:L.storeSalesForecast}}
 function warn(p,A){
   var L=[],st=p.staff,c=CONF;
   function bad(s){L.push('<li class="bad">'+esc(s)+'</li>')}
@@ -509,11 +518,9 @@ function warn(p,A){
   var needM=stVal(p)/c.rate*60,doneT=miseDone(p,curB);
   if(needM&&(doneT===null||doneT>A.mEnd))bad("店売り作成が開店前の"+hm(A.mEnd)+"に終わりません。"+stVal(p)+"個に約"+Math.ceil(needM)+"分（1人1時間"+c.rate+"個の推定）かかり、今の帯だと"+(doneT===null?"終わりません":hm(doneT)+"までかかります")+"（朝の人を増やす／帯を足す）");
   if(A.eShort||A.eE>c.saiEnd)bad("催事作成が"+hm(c.saiEnd)+"までに終わりません（人を足すか帯を調整）");
-  var work=st.reduce(function(s,x,i){var b=A.brk[i];return s+(x.e-x.s-(b?b.e-b.s:0))},0)/60,need=(stVal(p)+evVal(p))/c.hourlyRef;
-  if(need){var msg="組んだ"+Math.round(work*10)/10+"人時／必要の目安"+Math.round(need*10)/10+"人時（実績23個/人時）。";
-    if(work>need*1.2)L.push('<li>'+esc(msg+"余裕があるので早上がりの候補があります")+'</li>');
-    else if(work<need*.9)bad(msg+"人手が足りない見込みです");
-    else ok(msg+"ちょうど良い配置です")}
+  var lb=laborCalc(p);
+  if(lb){var m="人件費：枠 "+yen(lb.cap)+"（製造額×"+lb.rp+"%＋店舗売上見込み×"+lb.rs+"%）／計画 "+yen(lb.plan)+"（"+lb.hours+"時間×"+yen(lb.wage)+"）→ "+(lb.gap>=0?"余り ":"不足 ")+yen(Math.abs(lb.gap))+"（約"+Math.abs(lb.gapH)+"時間）";
+    if(lb.gap>=0)L.push('<li class="'+(lb.gap>lb.cap*.1?'bad':'ok')+'">'+esc(m+(lb.gap>lb.cap*.1?"。余りが大きいので早上がり・作業の前倒しを検討":""))+'</li>');else bad(m)}
   $("warn").innerHTML=L.join('');
 }
 
@@ -557,13 +564,13 @@ $("print").onclick=function(){var b=$("print"),p=plan(),ds=$("date").value;sel=n
   function done(t){b.textContent=t;setTimeout(function(){b.textContent="A3で印刷";b.disabled=false},6000)}
   function fail(m){done("A3で印刷");if(confirm("複合機へ送れませんでした（"+m+"）。この端末から印刷しますか？"))window.print()}
   b.disabled=true;b.textContent="送っています…";
-  printPost({date:ds,body:{date:ds,plan:{staff:p.staff,bars:p.bars,ov:p.ov,note:p.note},cur:cur}}).then(function(j){var n=0;b.textContent="印刷の順番待ち…";
+  printPost({date:ds,body:{date:ds,plan:{staff:p.staff,bars:p.bars,ov:p.ov,note:p.note},cur:cur,labor:air&&air.labor}}).then(function(j){var n=0;b.textContent="印刷の順番待ち…";
     (function poll(){setTimeout(function(){printPost({id:j.id}).then(function(s){
       if(s.status==="印刷済み")return done("複合機へ送りました");
       if(s.status.indexOf("失敗")===0||s.status==="上限"||s.status==="期限切れ")return fail(s.note||s.status);
       if(++n>40)return fail("Mac miniから応答がありません");poll()}).catch(function(){if(++n>40)return fail("通信できません");poll()})},5000)})()
   }).catch(function(e){fail(e.message)})};
-function go(ds){if(PJ){cur=PJ.cur;$("date").value=PJ.date;render();fit();return}
+function go(ds){if(PJ){cur=PJ.cur;air=PJ.labor?{people:[],labor:PJ.labor}:null;$("date").value=PJ.date;render();fit();return}
   undoSt=[];redoSt=[];lastState=null;$("date").value=ds;sel=null;closePop();Promise.all([fetchDay(ds),fetchAir(ds)]).then(function(){applyAir();render();fit()})}
 $("date").onchange=function(){go(this.value)};
 $("prev").onclick=function(){go(addD($("date").value,-1))};
@@ -577,8 +584,8 @@ function rzOf(t){return t.classList.contains("rzl")?"l":t.classList.contains("rz
 function dragger(el,b,B,rz){
   var tr=el.parentNode,w=tr.getBoundingClientRect().width,per=(T1-T0)/w,os=b.s,oe=b.e,x0=null,lastX=0,lastY=0,moved=false;
   return{start:function(x,y){x0=x;lastX=x;lastY=y;el.classList.add("lift")},
-   move:function(x,y){lastX=x;lastY=y;var d=Math.round((x-x0)*per/5)*5;if(!d&&!moved&&Math.abs(y)<0)return;if(d)moved=true;
-     if(rz==="l"){b.s=Math.min(b.e-5,Math.max(T0,os+d))}else if(rz){b.e=Math.max(b.s+5,Math.min(T1,oe+d))}else{var len=oe-os,st=Math.max(T0,Math.min(T1-len,os+d));b.s=st;b.e=st+len}
+   move:function(x,y){lastX=x;lastY=y;var d=Math.round((x-x0)*per/15)*15;if(!d&&!moved&&Math.abs(y)<0)return;if(d)moved=true;
+     if(rz==="l"){b.s=Math.min(b.e-15,Math.max(T0,os+d))}else if(rz){b.e=Math.max(b.s+15,Math.min(T1,oe+d))}else{var len=oe-os,st=Math.max(T0,Math.min(T1-len,os+d));b.s=st;b.e=st+len}
      el.style.left=X(b.s)+"%";el.style.width=(X(b.e)-X(b.s))+"%";
      if(!rz){el.style.visibility="hidden";var u=document.elementFromPoint(x,y);el.style.visibility="";var t=u&&u.closest&&u.closest(".gtrack[data-p]");if(t&&+t.dataset.p!==b.p){b.p=+t.dataset.p;moved=true;t.appendChild(el)}}},
    end:function(){el.classList.remove("lift");if(!moved)return false;var p=plan();B.splice(B.indexOf(b),1);placeBar(B,b);p.bars=B;save();render();return true}}}
@@ -602,7 +609,7 @@ function bindTracks(B){document.querySelectorAll("#sheet .gtrack[data-p]").forEa
     var r=tr.getBoundingClientRect(),t=T0+(ev.clientX-r.left)/r.width*(T1-T0),pi=+tr.dataset.p,x=plan().staff[pi],cut=[T0,T1];
     if(x)cut.push(x.s,x.e);B.forEach(function(b){if(b.p===pi)cut.push(b.s,b.e)});
     var lo=Math.max.apply(null,cut.filter(function(c){return c<=t})),hi=Math.min.apply(null,cut.filter(function(c){return c>t}));
-    if(hi-lo<5){lo=Math.max(T0,Math.round(t/5)*5-30);hi=lo+60}
+    lo=Math.round(lo/15)*15;hi=Math.round(hi/15)*15;if(hi-lo<15){lo=Math.max(T0,Math.round(t/5)*5-30);hi=lo+60}
     openPop({p:pi,s:lo,e:hi,k:"free"},B,true);
     var pv=document.createElement("div");pv.className="dropbar gapsel";pv.style.left=X(lo)+"%";pv.style.width=(X(hi)-X(lo))+"%";tr.appendChild(pv)}})}
 function closePop(){$("pop").classList.remove("on");document.querySelectorAll("#sheet .gapsel").forEach(function(e){e.remove()});$("sheet").classList.remove("editing");document.querySelectorAll("#sheet .bar.editing").forEach(function(e){e.classList.remove("editing")})}
@@ -614,11 +621,11 @@ function openPop(b,B,isNew){var p=plan();
   P.classList.add("on");
   $("pC").onclick=closePop;
     if(!isNew)$("pD").onclick=function(){B.splice(B.indexOf(b),1);p.bars=B;save();closePop();render()};
-  function val(o){o.k=$("pK").value;delete o.t;o.s=+$("pS").value;o.e=Math.max(o.s+5,+$("pE").value);o.p=+$("pP").value;return o}
+  function val(o){o.k=$("pK").value;delete o.t;o.s=+$("pS").value;o.e=Math.max(o.s+15,+$("pE").value);o.p=+$("pP").value;return o}
   $("pO").onclick=function(){val(b);if(!isNew)B.splice(B.indexOf(b),1);placeBar(B,b);p.bars=B;save();closePop();render()};
   if(!isNew){var k0=b.k;$("pK").onchange=function(){$("pN").hidden=$("pK").value===k0};
     $("pN").onclick=function(){placeBar(B,val({}));p.bars=B;save();closePop();render()}}}
-function optsAll(v){var s='';for(var t=T0;t<=T1;t+=5)s+='<option value="'+t+'"'+(t===v?' selected':'')+'>'+hm(t)+'</option>';return s}
+function optsAll(v){var s='';for(var t=T0;t<=T1;t+=15)s+='<option value="'+t+'"'+(t===v?' selected':'')+'>'+hm(t)+'</option>';return s}
 
 /* ---- 右の作業一覧から表へ引き込む ---- */
 var PAL=["kiji","yaki","mise","sai","shik","zai","kata","open","ykat","seal","kyu","free"],curB=[];
@@ -636,7 +643,7 @@ document.querySelectorAll(".pw").forEach(function(el){el.onpointerdown=function(
   function clear(){if(pv){pv.remove();pv=null}}
   function mv(e){g.style.left=(e.clientX-60)+"px";g.style.top=(e.clientY-18)+"px";clear();hit=null;
     var u=document.elementFromPoint(e.clientX,e.clientY),t=u&&u.closest&&u.closest(".gtrack[data-p]");if(!t)return;
-    var r=t.getBoundingClientRect(),m=T0+(e.clientX-r.left)/r.width*(T1-T0)-len/2;m=Math.max(T0,Math.min(T1-len,Math.round(m/5)*5));
+    var r=t.getBoundingClientRect(),m=T0+(e.clientX-r.left)/r.width*(T1-T0)-len/2;m=Math.max(T0,Math.min(T1-len,Math.round(m/15)*15));
     hit={p:+t.dataset.p,s:m,e:m+len,k:k};pv=document.createElement("div");pv.className="dropbar";pv.style.left=X(m)+"%";pv.style.width=(X(m+len)-X(m))+"%";t.appendChild(pv)}
   function up(){document.removeEventListener("pointermove",mv);document.removeEventListener("pointerup",up);g.remove();clear();
     if(hit){var p=plan();placeBar(curB,hit);p.bars=curB;save();render()}}
