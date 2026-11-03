@@ -560,7 +560,7 @@ function warn(p,A){
   
   var lb=laborCalc(p);
   if(lb){var m="人件費：枠 "+yen(lb.cap)+"（製造額×"+lb.rp+"%＋店舗売上見込み×"+lb.rs+"%）／計画 "+yen(lb.plan)+"（"+lb.hours+"時間×"+yen(lb.wage)+"）→ "+(lb.gap>=0?"枠まで残り ":"枠を超過 ")+yen(Math.abs(lb.gap))+"（約"+Math.abs(lb.gapH)+"時間）";
-    if(lb.gap>=0)L.push('<li class="'+(lb.gap>lb.cap*.1?'bad':'ok')+'">'+esc(m+(lb.gap>lb.cap*.1?"。余りが大きいので早上がり・作業の前倒しを検討":""))+'</li>');else bad(m)}
+    if(lb.gap>=0)ok(m+"。人件費率は目標の内側です");else bad(m+"。人件費率が目標を超えます（早上がり・作業の前倒しを検討）")}
   $("warn").innerHTML=L.join('');
 }
 
