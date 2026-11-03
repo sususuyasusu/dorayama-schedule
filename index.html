@@ -304,19 +304,20 @@ function fetchAir(ds){air=null;
 function toMin(s){var a=String(s).split(":");return +a[0]*60+ +a[1]}
 function hasR(x,r){return x.role===r||x.role2===r}
 function roleLabel(x){return ROLE_N[x.role]+(x.role2?"・"+ROLE_N[x.role2]:"")}
+function leaderOf(ppl){var L=(air&&air.leaders)||[];for(var k=0;k<L.length;k++){var hit=ppl.filter(function(x){return x.name===L[k]})[0];if(hit)return hit}return null}
 function fromAir(){var ppl=air.people.map(function(x){return{name:x.name,s:Math.max(T0,toMin(x.start)),e:Math.min(T1,toMin(x.end)),role:store.roleOf[x.name]==="reji"?"make":store.roleOf[x.name]||"",role2:store.role2Of[x.name]==="reji"?"":store.role2Of[x.name]||""}});
   ppl.sort(function(a,b){return a.s-b.s||b.e-a.e});
   function need(r){if(ppl.some(function(x){return hasR(x,r)}))return;
     var c=r==="reji"?ppl.filter(function(x){return!x.role&&x.s<=585&&x.e>=720}).sort(function(a,b){return b.e-a.e})[0]:ppl.filter(function(x){return!x.role})[0];if(c)c.role=r}
   need("kiji");need("yaki");
   ppl.forEach(function(x){if(!x.role)x.role="make"});
-  var ld=ppl.filter(function(x){return x.name===store.lastLead})[0]||ppl[0];if(ld)ld.lead=true;
+  var ld=leaderOf(ppl)||ppl.filter(function(x){return x.name===store.lastLead})[0]||ppl[0];if(ld)ld.lead=true;
   return ppl}
 function airSig(){return air&&air.people?JSON.stringify(air.people.map(function(x){return[x.name,x.start,x.end]})):""}
 // 名前と時間はエアシフトが正。持ち場・責任者は同じ人なら引き継ぎ、「＋人」で足した人は残す
 function mergeAir(p,sig){var old=p.staff,used=[],ppl=fromAir(),oldLead=false;
   ppl.forEach(function(x){var o=old.filter(function(y){return y.name===x.name&&used.indexOf(y)<0})[0];if(!o)return;used.push(o);x.role=o.role;x.role2=o.role2||"";if(o.lead)oldLead=x});
-  if(oldLead)ppl.forEach(function(x){x.lead=x===oldLead});
+  var fixed=leaderOf(ppl);if(fixed)ppl.forEach(function(x){x.lead=x===fixed});else if(oldLead)ppl.forEach(function(x){x.lead=x===oldLead});
   p.staff=ppl.concat(old.filter(function(o){return o.manual&&used.indexOf(o)<0}));
   p.bars=null;p.edited=false;p.airSig=sig}
 function applyAir(){var p=plan();
