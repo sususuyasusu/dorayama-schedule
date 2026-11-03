@@ -220,7 +220,7 @@ var ROLES=[["kiji","生地"],["yaki","焼き"],["make","作成"],["reji","レジ
 var CONF={open:600,stopKiji:660,stopYaki:690,saiEnd:930,pace:15,eggMin:45,paceYaki2:12,paceYaki1:20,rate:80,hourlyRef:23,yakiLag:20,kataKiji:15,kataYaki:20,zaiko:910,kata:930,close:960,closeWork:15};
 var KIND={
  kiji:{t:"生地",c:"k-kiji"},yaki:{t:"焼き",c:"k-yaki"},yjun:{t:"焼台準備",c:"k-jun"},kkat:{t:"生地片付け",c:"k-kata"},ykat:{t:"焼台清掃",c:"k-kata"},
- jun:{t:"作成の準備",c:"k-jun"},mise:{t:"店売り作成",c:"k-mise"},hoju:{t:"補充",c:"k-jun"},open:{t:"開店準備",c:"k-open"},
+ jun:{t:"作成の準備",c:"k-jun"},mise:{t:"店売り作成",c:"k-mise"},open:{t:"開店準備",c:"k-open"},
  sai:{t:"催事作成",c:"k-sai"},shik:{t:"翌日の仕込み",c:"k-shik"},zai:{t:"在庫",c:"k-zai"},kata:{t:"片付け",c:"k-kata"},clos:{t:"閉店作業",c:"k-open"},kyu:{t:"休憩",c:"k-kyu"},free:{t:"作業",c:"k-free"},egg:{t:"卵計量",c:"k-egg"},seal:{t:"シーラー",c:"k-seal"}
 };
 var WD=["日","月","火","水","木","金","土"];
@@ -347,7 +347,7 @@ function evVal(p){return p.ov&&p.ov.event!=null&&p.ov.event!==""?num(p.ov.event)
 function compute(p){
   // 以前の「レジ」の持ち場は作成へ、レジの帯は消す
   p.staff.forEach(function(x){if(x.role==="reji")x.role="make";if(x.role2==="reji")x.role2=""});
-  if(p.bars)p.bars=p.bars.filter(function(b){return!/(^|\+)(reji|cov)(\+|$)/.test(String(b.k))});
+  if(p.bars)p.bars=p.bars.filter(function(b){return!/(^|\+)(reji|cov|hoju)(\+|$)/.test(String(b.k))});
   var c=CONF,st=p.staff,rot=Math.ceil(rotVal(p)),A={};
   var ks=st.filter(function(x){return hasR(x,"kiji")}),ys=st.filter(function(x){return hasR(x,"yaki")});
   var msPeople=st.filter(function(x){return hasR(x,"make")||hasR(x,"reji")});
@@ -485,7 +485,7 @@ function checkBox(p,A,B){
   var L=[];
   function add(t,x){if(t)L.push({t:t,x:x})}
   add(lastEnd(B,"mise"),miseDone(p,B)===null?"店売り作成 ※"+stVal(p)+"個に届かず":"店売り作成 完了 "+stVal(p)+"個");
-  add(CONF.open,"補充・開店準備→開店");
+  add(CONF.open,"開店準備→開店");
   if(A.egg)add(A.egg.e,"卵計量 完了");
   add(lastEnd(B,"kiji"),"生地 終了 "+A.reach+"回転");
   add(lastEnd(B,"yaki"),"皮 焼き終わり→清掃");
