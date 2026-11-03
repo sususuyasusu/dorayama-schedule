@@ -117,7 +117,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;b
 .sheet.editing .bar{opacity:.35}
 .sheet.editing .bar.editing{opacity:1;outline:1.2mm solid #d8552c;outline-offset:.4mm;z-index:6;box-shadow:0 2mm 6mm rgba(0,0,0,.4)}
 .bar{color:#fff;border:0;border-bottom:1mm solid rgba(0,0,0,.28);border-radius:1.2mm}
-.k-kiji{background:#f7983e}.k-yaki{background:#e8665a}.k-mise{background:#5cab13}.k-sai{background:#2a9fd6}.k-reji{background:#b474b8}.k-shik{background:#c99a5b}.k-zai{background:#17a398}.k-kata{background:#7f8c95}.k-jun{background:#a98f6f}.k-open{background:#fb6fa8}.k-free{background:#fb6fa8}
+.k-kiji{background:#f7983e}.k-yaki{background:#e8665a}.k-mise{background:#5cab13}.k-sai{background:#2a9fd6}.k-reji{background:#b474b8}.k-shik{background:#c99a5b}.k-zai{background:#17a398}.k-kata{background:#7f8c95}.k-jun{background:#a98f6f}.k-open{background:#fb6fa8}.k-free{background:#fb6fa8}.k-seal{background:#c9a227}
 .k-kyu{background:#fff;color:#555;border:.35mm dashed #999;border-radius:1.2mm}
 .shiftbg{position:absolute;top:0;bottom:0;background:#d6eef8}
 .dropbar{position:absolute;top:9%;bottom:9%;border:.5mm dashed #e8488a;background:rgba(251,111,168,.25);border-radius:1.2mm;pointer-events:none}
@@ -220,7 +220,7 @@ var CONF={open:600,stopKiji:660,stopYaki:690,pace:15,paceMin:12,rate:80,hourlyRe
 var KIND={
  kiji:{t:"生地",c:"k-kiji"},yaki:{t:"焼き",c:"k-yaki"},yjun:{t:"焼台準備",c:"k-jun"},kkat:{t:"生地片付け",c:"k-kata"},ykat:{t:"焼台清掃",c:"k-kata"},
  jun:{t:"作成の準備",c:"k-jun"},mise:{t:"店売り作成",c:"k-mise"},hoju:{t:"補充",c:"k-jun"},open:{t:"開店準備",c:"k-open"},reji:{t:"レジ・接客",c:"k-reji"},cov:{t:"レジ交代",c:"k-reji"},
- sai:{t:"催事作成",c:"k-sai"},shik:{t:"翌日の仕込み",c:"k-shik"},zai:{t:"在庫",c:"k-zai"},kata:{t:"片付け",c:"k-kata"},clos:{t:"閉店作業",c:"k-open"},kyu:{t:"休憩",c:"k-kyu"},free:{t:"作業",c:"k-free"}
+ sai:{t:"催事作成",c:"k-sai"},shik:{t:"翌日の仕込み",c:"k-shik"},zai:{t:"在庫",c:"k-zai"},kata:{t:"片付け",c:"k-kata"},clos:{t:"閉店作業",c:"k-open"},kyu:{t:"休憩",c:"k-kyu"},free:{t:"作業",c:"k-free"},seal:{t:"シーラー",c:"k-seal"}
 };
 var WD=["日","月","火","水","木","金","土"];
 var S={};
@@ -621,7 +621,7 @@ function openPop(b,B,isNew){var p=plan();
 function optsAll(v){var s='';for(var t=T0;t<=T1;t+=5)s+='<option value="'+t+'"'+(t===v?' selected':'')+'>'+hm(t)+'</option>';return s}
 
 /* ---- 右の作業一覧から表へ引き込む ---- */
-var PAL=["kiji","yaki","mise","sai","reji","shik","zai","kata","open","ykat","kyu","free"],curB=[];
+var PAL=["kiji","yaki","mise","sai","reji","shik","zai","kata","open","ykat","seal","kyu","free"],curB=[];
 $("pal").innerHTML=PAL.map(function(k){return'<div class="pw '+KIND[k].c+'" data-k="'+k+'">'+KIND[k].t+'</div>'}).join('');
 function placeBar(B,b){ // 同じ作業は重なるか接すれば1本に、別の作業は並行、休憩は新しい帯に場所を譲る
   for(var j=B.length-1;j>=0;j--){var q=B[j];if(q.p===b.p&&q.k===b.k&&q.e>=b.s&&q.s<=b.e){b.s=Math.min(b.s,q.s);b.e=Math.max(b.e,q.e);B.splice(j,1)}}
