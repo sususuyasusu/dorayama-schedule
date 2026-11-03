@@ -326,6 +326,7 @@ function applyAir(){var p=plan();
   if(air.failed){$("status").textContent+="シフトを読めませんでした";return false}
   var sig=airSig();
   if(!air.people.length)$("status").textContent+="エアシフトにこの日の人が未入力です";
+  var fx=leaderOf(p.staff);if(fx&&!fx.lead){p.staff.forEach(function(x){x.lead=x===fx});save()}
   if(!air.people.length||p.airSig===sig)return false;
   mergeAir(p,sig);save();return true}
 document.addEventListener("visibilitychange",function(){if(document.hidden||$("pop").classList.contains("on"))return;var ds=$("date").value;fetchAir(ds).then(function(){if(ds===$("date").value&&applyAir())render()})});
