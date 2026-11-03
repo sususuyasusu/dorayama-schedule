@@ -441,6 +441,7 @@ function layLanes(list){var idx=list.map(function(b,i){return i}).sort(function(
 function X(t){return(t-T0)/(T1-T0)*100}
 function render(){
   var p=plan(),A=compute(p),B=bars(p,A),ds=$("date").value,d=parseD(ds);
+  curB=B;
   var lead=p.staff.filter(function(x){return x.lead})[0];
   var h='<div class="hd"><div><div class="ttl">門仲どらやき どら山｜当日の時間割</div><div class="d">'+(d.getMonth()+1)+'/'+d.getDate()+'<small>（'+WD[d.getDay()]+'）</small></div></div>'+(p.note?'<div class="hnote ed" id="noteEd"><span>責任者からひとこと</span>'+esc(p.note)+'</div>':'<div class="hnote empty ed np" id="noteEd">ここをタップしてひとことを書く</div>')+
    '<div class="big"><div class="ed" data-ov="rot"><span>回転数</span><b>'+(cur.kaiten&&!(p.ov&&p.ov.rot)?cur.kaiten:rotVal(p))+'</b></div><div class="ed" data-ov="store"><span>店売り</span><b>'+stVal(p)+'<i>個</i></b></div><div class="ed" data-ov="event"><span>催事</span><b>'+evVal(p)+'<i>個</i></b></div>'+
