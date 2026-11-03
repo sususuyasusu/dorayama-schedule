@@ -499,7 +499,7 @@ function warn(p,A){
   for(var t=c.open;t<c.close;t+=5){var on=curB.some(function(b){var ks=String(b.k).split("+");return(ks.indexOf("reji")>=0||ks.indexOf("cov")>=0)&&b.s<=t&&b.e>t});
     if(!on&&gs===null)gs=t;if(on&&gs!==null){gaps.push(hm(gs)+"〜"+hm(t));gs=null}}
   if(gs!==null)gaps.push(hm(gs)+"〜"+hm(c.close));
-  if(gaps.length)bad("レジが空く時間があります："+gaps.join("、"));
+  
   st.forEach(function(x,i){if(x.e-x.s<=360)return;var k=curB.filter(function(b){return b.p===i&&b.k==="kyu"}).reduce(function(a,b){return a+b.e-b.s},0),need=x.e-x.s>480?60:45;
     if(k<need)bad((x.name||("担当"+(i+1)))+"さんの休憩が"+k+"分です（"+(need===60?"8":"6")+"時間超は"+need+"分）")});
   
