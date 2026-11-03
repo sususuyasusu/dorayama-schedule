@@ -365,7 +365,11 @@ function compute(p){
   var ys0=ys.length?Math.min.apply(null,ys.map(startOf)):gS,yS=Math.max(gS+c.yakiLag,ys0);
   // 5分ごとに、その時いる焼きの人数で焼ける量を積む（焼き2人以上=1時間5回転・1人=3回転）
   var W=c.stopYaki;
-  var capAt=function(t){var n=ys.filter(function(x){return x.s<=t&&x.e>t&&!(egg&&st[egg.i]===x&&t<egg.e)}).length;return n>=2?1/c.paceYaki2:n===1?1/c.paceYaki1:0};
+  var hb=p.bars&&p.bars.some(function(b){return String(b.k).split("+").indexOf("yaki")>=0})?p.bars:null;
+  var capAt=function(t){var n;
+    if(hb){var who={};hb.forEach(function(b){if(String(b.k).split("+").indexOf("yaki")>=0&&b.s<=t&&b.e>t)who[b.p]=1});n=Object.keys(who).length}
+    else n=ys.filter(function(x){return x.s<=t&&x.e>t&&!(egg&&st[egg.i]===x&&t<egg.e)}).length;
+    return n>=2?1/c.paceYaki2:n===1?1/c.paceYaki1:0};
   var sim=function(rho){var v=0,tl=[];for(var t=yS;t<W;t+=5){v+=5*Math.min(capAt(t),rho);tl.push([t+5,v])}return tl};
   var tl=sim(1),C=tl.length?tl[tl.length-1][1]:0;
   if(C>rot+1e-9){var lo=0,hi=1/c.paceYaki2;for(var k=0;k<30;k++){var md=(lo+hi)/2,tm=sim(md);if(tm[tm.length-1][1]>=rot)hi=md;else lo=md}
