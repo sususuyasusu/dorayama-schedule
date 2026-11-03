@@ -554,14 +554,19 @@ function miseDone(p,B){var need=stVal(p)/CONF.rate*60,got=0;
   for(var t=T0;t<T1;t+=5){got+=5*B.filter(function(b){return String(b.k).split("+").indexOf("mise")>=0&&b.s<=t&&b.e>t}).length;if(got>=need)return t+5}
   return null}
 function yen(v){return Math.round(v).toLocaleString("ja-JP")+"円"}
+var LC={},LCwait={},COST_API="https://dorayama-seizo-app-1.onrender.com/api/labor-cost";
+function laborFetch(k,lst){if(LCwait[k])return;LCwait[k]=1;
+  fetch(COST_API,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({date:$("date").value,staff:lst})}).then(function(r){return r.json()}).then(function(j){LC[k]=j&&j.total!=null?j:null;render()}).catch(function(){LC[k]=null})}
 function laborCalc(p){var L=air&&air.labor;if(!L||!L.unitValue||L.storeSalesForecast==null)return null;
   var pieces=cur.total||stVal(p)+evVal(p);if(!pieces)return null;
   var prod=pieces*L.unitValue,cap=prod*L.rateProduction/100;
   var mins=p.staff.reduce(function(s,x,i){var k=curB.filter(function(b){return b.p===i&&b.k==="kyu"}).reduce(function(a,b){return a+b.e-b.s},0);return s+Math.max(0,x.e-x.s-k)},0);
   var emp=L.employees||[],ed=L.employeeDaily,ne=0,pm=0;
   p.staff.forEach(function(x,i){var k=curB.filter(function(b){return b.p===i&&b.k==="kyu"}).reduce(function(a,b){return a+b.e-b.s},0),m=Math.max(0,x.e-x.s-k);if(ed&&emp.indexOf(x.name)>=0)ne++;else pm+=m});
-  var plan=ed?ne*ed+pm/60*L.hourlyWage:mins/60*L.hourlyWage,gap=cap-plan;
-  return{unit:L.unitValue,prod:prod,ratio:prod?plan/prod*100:0,cap:cap,plan:plan,gap:gap,gapH:Math.round(gap/L.hourlyWage*10)/10,hours:Math.round(mins/6)/10,emp:ed?ne:0,partH:Math.round(pm/6)/10,wage:L.hourlyWage,rp:L.rateProduction,rs:L.rateStoreSales,sales:L.storeSalesForecast}}
+  var lst=p.staff.map(function(x,i){var k=curB.filter(function(b){return b.p===i&&b.k==="kyu"}).reduce(function(a,b){return a+b.e-b.s},0);return{name:x.name,mins:Math.max(0,x.e-x.s-k)}});
+  var lk=$("date").value+JSON.stringify(lst),real=LC[lk];if(real===undefined)laborFetch(lk,lst);
+  var plan=real?real.total:(ed?ne*ed+pm/60*L.hourlyWage:mins/60*L.hourlyWage),gap=cap-plan;
+  return{real:real||null,unit:L.unitValue,prod:prod,ratio:prod?plan/prod*100:0,cap:cap,plan:plan,gap:gap,gapH:Math.round(gap/L.hourlyWage*10)/10,hours:Math.round(mins/6)/10,emp:ed?ne:0,partH:Math.round(pm/6)/10,wage:L.hourlyWage,rp:L.rateProduction,rs:L.rateStoreSales,sales:L.storeSalesForecast}}
 function warn(p,A){
   var L=[],st=p.staff,c=CONF;
   function bad(s){L.push('<li class="bad">'+esc(s)+'</li>')}
@@ -584,7 +589,7 @@ function warn(p,A){
   
   
   var lb=laborCalc(p);
-  if(lb){var m="人件費 "+yen(lb.plan)+(lb.emp?"（社員"+lb.emp+"人は月給の日額・ほか"+lb.partH+"時間×"+yen(lb.wage)+"）":"（"+lb.hours+"時間×"+yen(lb.wage)+"）")+"÷ 製造額 "+yen(lb.prod)+"（"+Math.round(lb.prod/lb.unit)+"個×"+yen(lb.unit)+"）＝ "+(Math.round(lb.ratio*10)/10)+"%（目安"+lb.rp+"%・枠 "+yen(lb.cap)+"）→ "+(lb.gap>=0?"枠まで残り ":"枠を超過 ")+yen(Math.abs(lb.gap))+"（約"+Math.abs(lb.gapH)+"時間）";
+  if(lb){var m="人件費 "+yen(lb.plan)+(lb.real?"（社員"+lb.real.employees+"人は月給の日割り・アルバイト"+Math.round(lb.real.partMinutes/6)/10+"時間は各自の時給"+(lb.real.unknown?"・名簿に無い"+lb.real.unknown+"人はタイミー単価":"")+"）":"（計算中・仮に"+lb.hours+"時間×"+yen(lb.wage)+"）")+"÷ 製造額 "+yen(lb.prod)+"（"+Math.round(lb.prod/lb.unit)+"個×"+yen(lb.unit)+"）＝ "+(Math.round(lb.ratio*10)/10)+"%（目安"+lb.rp+"%・枠 "+yen(lb.cap)+"）→ "+(lb.gap>=0?"枠まで残り ":"枠を超過 ")+yen(Math.abs(lb.gap))+"（約"+Math.abs(lb.gapH)+"時間）";
     if(lb.gap>=0)ok(m+"。人件費率は目標の内側です");else bad(m+"。人件費率が目標を超えます（早上がり・作業の前倒しを検討）")}
   $("warn").innerHTML=L.join('');
 }
