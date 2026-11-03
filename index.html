@@ -472,9 +472,12 @@ function layLanes(list){var idx=list.map(function(b,i){return i}).sort(function(
     for(var l=0;l<ends.length&&ends[l]>b.s;l++);ends[l]=b.e;grp.push({i:i,l:l})});
   flush();out.max=max;return out}
 function X(t){return(t-T0)/(T1-T0)*100}
+function useActual(){var a=air&&air.actual;cur.actual=false;if(!a||!a.blocks||!a.blocks.length)return;
+  cur.blocks=a.blocks;cur.storeN=0;cur.eventN=0;a.blocks.forEach(function(b){if(b.name.indexOf("店舗")>=0)cur.storeN+=dayCount(b);else cur.eventN+=dayCount(b)});
+  cur.total=cur.storeN+cur.eventN;if(a.kaiten){cur.kaiten=Math.round(a.kaiten*10)/10;cur.rot=Math.ceil(a.kaiten)}cur.actual=true}
 function isMan(p,k){return!!(p.ov&&p.ov[k]!=null&&p.ov[k]!=="")}
 function manC(p,k){return isMan(p,k)?" man":""}
-function manL(p,k){return isMan(p,k)?"（手入力）":""}
+function manL(p,k){return isMan(p,k)?"（手入力）":cur.actual?"（実績）":""}
 function render(){
   var p=plan(),A=compute(p),B=bars(p,A),ds=$("date").value,d=parseD(ds);
   curB=B;
@@ -624,7 +627,7 @@ $("print").onclick=function(){var b=$("print"),p=plan(),ds=$("date").value;sel=n
       if(++n>40)return fail("Mac miniから応答がありません");poll()}).catch(function(){if(++n>40)return fail("通信できません");poll()})},5000)})()
   }).catch(function(e){fail(e.message)})};
 function go(ds){if(PJ){cur=PJ.cur;air=PJ.labor?{people:[],labor:PJ.labor}:null;$("date").value=PJ.date;render();fit();return}
-  undoSt=[];redoSt=[];lastState=null;$("date").value=ds;sel=null;closePop();Promise.all([fetchDay(ds),fetchAir(ds)]).then(function(){applyAir();render();fit()})}
+  undoSt=[];redoSt=[];lastState=null;$("date").value=ds;sel=null;closePop();Promise.all([fetchDay(ds),fetchAir(ds)]).then(function(){applyAir();useActual();render();fit()})}
 $("date").onchange=function(){go(this.value)};
 $("prev").onclick=function(){go(addD($("date").value,-1))};
 $("next").onclick=function(){go(addD($("date").value,1))};
