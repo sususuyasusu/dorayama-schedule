@@ -371,8 +371,12 @@ function compute(p){
   var W=c.stopYaki;
   var hb=p.bars&&p.bars.some(function(b){return String(b.k).split("+").indexOf("yaki")>=0})?p.bars:null;
   var capAt=function(t){var n;
-    if(hb){var who={};hb.forEach(function(b){if(String(b.k).split("+").indexOf("yaki")>=0&&b.s<=t&&b.e>t)who[b.p]=1});n=Object.keys(who).length}
-    else n=ys.filter(function(x){return x.s<=t&&x.e>t&&!(egg&&!egg.par&&st[egg.i]===x&&t<egg.e)&&!(soloA&&soloA.addY&&x===solo&&t>=soloA.until)}).length;
+    var ded=0,both=0;
+    if(hb){var wy={},wk={};hb.forEach(function(b){var ks2=String(b.k).split("+");if(b.s<=t&&b.e>t){if(ks2.indexOf("yaki")>=0)wy[b.p]=1;if(ks2.indexOf("kiji")>=0)wk[b.p]=1}});
+      Object.keys(wy).forEach(function(k){if(wk[k])both++;else ded++})}
+    else ys.filter(function(x){return x.s<=t&&x.e>t&&!(egg&&!egg.par&&st[egg.i]===x&&t<egg.e)&&!(soloA&&soloA.addY&&x===solo&&t>=soloA.until)}).forEach(function(x){
+      var doingK=t<c.stopKiji&&(hasR(x,"kiji")||(soloA&&soloA.addK&&x===solo&&t<soloA.until));if(doingK)both++;else ded++});
+    n=ded>0?ded:(both>0?1:0);
     return n>=2?1/c.paceYaki2:n===1?1/c.paceYaki1:0};
   var sim=function(rho){var v=0,tl=[];for(var t=yS;t<W;t+=5){v+=5*Math.min(capAt(t),rho);tl.push([t+5,v])}return tl};
   var tl=sim(1),C=tl.length?tl[tl.length-1][1]:0;
