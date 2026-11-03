@@ -515,7 +515,7 @@ function lastEnd(B,k){var e=0;B.forEach(function(b){if(b.k.split("+").indexOf(k)
 function checkBox(p,A,B){
   var L=[];
   function add(t,x){if(t)L.push({t:t,x:x})}
-  add(lastEnd(B,"mise"),miseDone(p,B)===null?"店売り作成 ※"+stVal(p)+"個に届かず":"店売り作成 完了 "+stVal(p)+"個");
+  add(lastEnd(B,"mise"),miseDone(p,B)===null?"店売り作成 ※"+stVal(p)+"個 不足":"店売り作成 完了 "+stVal(p)+"個");
   add(CONF.open,"開店準備→開店");
   if(A.egg)add(A.egg.e,"卵計量 完了");
   add(lastEnd(B,"kiji"),"生地 終了 "+A.reach+"回転");
