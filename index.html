@@ -351,10 +351,11 @@ function compute(p){
   var c=CONF,st=p.staff,rot=Math.ceil(rotVal(p)),A={};
   var ks=st.filter(function(x){return hasR(x,"kiji")}),ys=st.filter(function(x){return hasR(x,"yaki")});
   var msPeople=st.filter(function(x){return hasR(x,"make")||hasR(x,"reji")});
-  // 卵計量：作成の人→焼きの人→生地の人の順で、いちばん早く来る人が出勤直後に行う
+  // 卵計量：いちばん早く来る人が出勤直後に行う（同じ時刻なら 作成→焼き→生地 の順）
   var egg=null,wd=parseD($("date").value).getDay();
   if(wd===2||wd===4||wd===6){var first=function(a){return a.slice().sort(function(x,y){return x.s-y.s})[0]};
-    var e0=first(st.filter(function(x){return hasR(x,"make")&&!hasR(x,"kiji")&&!hasR(x,"yaki")}))||first(ys)||first(ks)||first(st);
+    var pr=function(x){return hasR(x,"kiji")?2:hasR(x,"yaki")?1:0};
+    var e0=st.slice().sort(function(x,y){return x.s-y.s||pr(x)-pr(y)})[0];
     if(e0)egg={i:st.indexOf(e0),s:e0.s,e:e0.s+c.eggMin}}
   var startOf=function(x){return egg&&st[egg.i]===x?egg.e:x.s};
   var gS=ks.length?Math.min.apply(null,ks.map(startOf)):c.pace+T0;
@@ -482,9 +483,9 @@ function lastEnd(B,k){var e=0;B.forEach(function(b){if(b.k.split("+").indexOf(k)
 function checkBox(p,A,B){
   var L=[];
   function add(t,x){if(t)L.push({t:t,x:x})}
-  add(lastEnd(B,"mise"),miseDone(p,B)===null?"店売り作成 ※この帯では"+stVal(p)+"個に届かない":"店売り作成 完了 "+stVal(p)+"個");
+  add(lastEnd(B,"mise"),miseDone(p,B)===null?"店売り作成 ※"+stVal(p)+"個に届かず":"店売り作成 完了 "+stVal(p)+"個");
   add(CONF.open,"補充・開店準備→開店");
-  if(A.egg)add(A.egg.e,"卵計量 完了（早朝入荷）");
+  if(A.egg)add(A.egg.e,"卵計量 完了");
   add(lastEnd(B,"kiji"),"生地 終了 "+A.reach+"回転");
   add(lastEnd(B,"yaki"),"皮 焼き終わり→清掃");
   add(lastEnd(B,"sai"),"催事作成 完了 "+evVal(p)+"個");
