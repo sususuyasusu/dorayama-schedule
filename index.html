@@ -217,7 +217,7 @@ var SHEET_ID="1PRDhGP_4xiO_ZjJP3NB9Id3PmaPa5W7hNyrqFQ5EyqM";
 var T0=7*60,T1=16*60+30;
 var ROLES=[["kiji","生地"],["yaki","焼き"],["make","作成"],["reji","レジ"]];
 // 所要の初期値（推定）。実際の終了時刻の記入をもとに直していく
-var CONF={open:600,stopKiji:660,stopYaki:690,saiEnd:930,pace:15,eggMin:45,paceYaki2:12,paceYaki1:20,rate:80,hourlyRef:23,yakiLag:15,kataKiji:15,kataYaki:15,zaiko:910,kata:930,pmStart:900,pmPrep:930,close:960,closeWork:15};
+var CONF={open:600,stopKiji:660,stopYaki:690,saiEnd:930,pace:15,eggMin:45,eggBy:630,paceYaki2:12,paceYaki1:20,rate:80,hourlyRef:23,yakiLag:15,kataKiji:15,kataYaki:15,zaiko:910,kata:930,pmStart:900,pmPrep:930,close:960,closeWork:15};
 var KIND={
  kiji:{t:"生地",c:"k-kiji"},yaki:{t:"焼き",c:"k-yaki"},yjun:{t:"焼台準備",c:"k-jun"},kkat:{t:"生地清掃",c:"k-kata"},ykat:{t:"焼台清掃",c:"k-kata"},
  jun:{t:"作成の準備",c:"k-jun"},mise:{t:"店売り作成",c:"k-mise"},open:{t:"開店準備",c:"k-open"},
@@ -355,11 +355,12 @@ function compute(p){
   var msPeople=st.filter(function(x){return hasR(x,"make")||hasR(x,"reji")});
   // 卵計量：いちばん早く来る人が出勤直後に行う（同じ時刻なら 作成→焼き→生地 の順）
   var egg=null,wd=parseD($("date").value).getDay();
-  if(wd===2||wd===4||wd===6){var first=function(a){return a.slice().sort(function(x,y){return x.s-y.s})[0]};
-    var pr=function(x){return hasR(x,"kiji")?2:hasR(x,"yaki")?1:0};
-    var e0=st.slice().sort(function(x,y){return x.s-y.s||pr(x)-pr(y)})[0];
-    if(e0)egg={i:st.indexOf(e0),s:e0.s,e:e0.s+c.eggMin}}
-  var startOf=function(x){return egg&&st[egg.i]===x?egg.e:x.s};
+  if(wd===2||wd===4||wd===6){var lim=c.eggBy-c.eggMin;
+    var mk=st.filter(function(x){return hasR(x,"make")&&!hasR(x,"kiji")&&!hasR(x,"yaki")&&x.s<=lim}).sort(function(x,y){return x.s-y.s})[0];
+    if(mk)egg={i:st.indexOf(mk),s:mk.s,e:mk.s+c.eggMin,par:false};
+    else{var kj=st.filter(function(x){return hasR(x,"kiji")}).sort(function(x,y){return x.s-y.s})[0]||st.slice().sort(function(x,y){return x.s-y.s})[0];
+      if(kj){var es=Math.min(kj.s+15,lim);egg={i:st.indexOf(kj),s:es,e:es+c.eggMin,par:true}}}}
+  var startOf=function(x){return x.s};
   var gS=ks.length?Math.min.apply(null,ks.map(startOf)):c.pace+T0;
   var handStart=function(k){if(!p.bars)return null;var v=p.bars.filter(function(b){return String(b.k).split("+").indexOf(k)>=0}).map(function(b){return b.s});return v.length?Math.min.apply(null,v):null};
   var hk=handStart("kiji"),hy=handStart("yaki");if(hk!=null)gS=hk;
@@ -414,7 +415,7 @@ function compute(p){
 function kindAt(x,i,t,A){
   var c=CONF,b=A.brk[i];
   if(b&&t>=b.s&&t<b.e)return"kyu";
-  if(A.egg&&A.egg.i===i&&t>=A.egg.s&&t<A.egg.e)return"egg";
+  if(A.egg&&!A.egg.par&&A.egg.i===i&&t>=A.egg.s&&t<A.egg.e)return"egg";
   var c2=CONF;if(A.pm&&t>=c2.pmStart&&t<c2.close){var j=A.pm.indexOf(i);
     // 1人目：15:00在庫→15:30翌日の仕込み／2人目：15:00清掃（1人だけの日は1人目が15:15から清掃）
     if(j===0){if(t<c2.pmStart+15)return"zai";if(t>=c2.pmPrep)return"shik";if(A.pm.length===1)return"kata"}
@@ -445,6 +446,7 @@ function buildBars(p,A){var out=[];
     for(;t<=lim;t+=5){var n=t<lim?kindAt(x,i,t,A):null;
       if(n!==k){if(k)out.push({p:i,s:s,e:t,k:k});k=n;s=t}}
     if(i===closer)out.push({p:i,s:CONF.close,e:CONF.close+CONF.closeWork,k:"clos"})});
+  if(A.egg&&A.egg.par)out.push({p:A.egg.i,s:A.egg.s,e:A.egg.e,k:"egg"});
   if(A.solo){if(A.solo.addK&&A.gE>A.gS)out.push({p:A.solo.i,s:A.gS,e:A.gE,k:"kiji"});if(A.solo.addY&&A.yE>A.yS)out.push({p:A.solo.i,s:A.yS,e:A.yE,k:"yaki"})}
   if(A.ykMise&&A.mEnd>Math.max(A.mS,A.ykMise.s))out.push({p:A.ykMise.i,s:Math.max(A.mS,A.ykMise.s),e:A.mEnd,k:"mise"});
   // 休憩の前後に残る20分以下の細切れは、隣の作業に吸収する
