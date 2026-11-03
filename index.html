@@ -532,8 +532,8 @@ function warn(p,A){
   if(!A.rot)bad("回転数が0です");
   if(A.reach<A.rot)bad("焼き"+A.yN+"人だと1時間"+(A.yN>=2?5:3)+"回転が上限です。この人数と時間では"+A.reach+"回転までで、"+A.rot+"回転に届きません（焼きを2人にする／早く始める／回転数を調整）");
   var needM=stVal(p)/c.rate*60,doneT=miseDone(p,curB);
-  if(needM&&(doneT===null||doneT>A.mEnd))bad("店売り作成が開店前の"+hm(A.mEnd)+"に終わりません。"+stVal(p)+"個に約"+Math.ceil(needM)+"分（1人1時間"+c.rate+"個の推定）かかり、今の帯だと"+(doneT===null?"終わりません":hm(doneT)+"までかかります")+"（朝の人を増やす／帯を足す）");
-  if(A.eShort||A.eE>c.saiEnd)bad("催事作成が"+hm(c.saiEnd)+"までに終わりません（人を足すか帯を調整）");
+  
+  
   var lb=laborCalc(p);
   if(lb){var m="人件費：枠 "+yen(lb.cap)+"（製造額×"+lb.rp+"%＋店舗売上見込み×"+lb.rs+"%）／計画 "+yen(lb.plan)+"（"+lb.hours+"時間×"+yen(lb.wage)+"）→ "+(lb.gap>=0?"余り ":"不足 ")+yen(Math.abs(lb.gap))+"（約"+Math.abs(lb.gapH)+"時間）";
     if(lb.gap>=0)L.push('<li class="'+(lb.gap>lb.cap*.1?'bad':'ok')+'">'+esc(m+(lb.gap>lb.cap*.1?"。余りが大きいので早上がり・作業の前倒しを検討":""))+'</li>');else bad(m)}
