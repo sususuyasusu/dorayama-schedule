@@ -621,7 +621,7 @@ function openPop(b,B,isNew){var p=plan();
 function optsAll(v){var s='';for(var t=T0;t<=T1;t+=5)s+='<option value="'+t+'"'+(t===v?' selected':'')+'>'+hm(t)+'</option>';return s}
 
 /* ---- 右の作業一覧から表へ引き込む ---- */
-var PAL=["kiji","yaki","mise","sai","reji","shik","zai","kata","open","ykat","seal","kyu","free"],curB=[];
+var PAL=["kiji","yaki","mise","sai","shik","zai","kata","open","ykat","seal","kyu","free"],curB=[];
 $("pal").innerHTML=PAL.map(function(k){return'<div class="pw '+KIND[k].c+'" data-k="'+k+'">'+KIND[k].t+'</div>'}).join('');
 function placeBar(B,b){ // 同じ作業は重なるか接すれば1本に、別の作業は並行、休憩は新しい帯に場所を譲る
   for(var j=B.length-1;j>=0;j--){var q=B[j];if(q.p===b.p&&q.k===b.k&&q.e>=b.s&&q.s<=b.e){b.s=Math.min(b.s,q.s);b.e=Math.max(b.e,q.e);B.splice(j,1)}}
