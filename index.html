@@ -385,7 +385,8 @@ function compute(p){
   var gE=Math.min(c.stopKiji,Math.max(gS+15,Math.round((yE-c.yakiLag)/5)*5));
   var pace=reach?(yE-yS)/reach:c.pace;
   var third=st.filter(function(x){return hasR(x,"make")&&!hasR(x,"kiji")&&!hasR(x,"yaki")}).sort(function(a,b){return a.s-b.s})[0];
-  var earlyEnd=Math.min(third?third.s:c.open,c.open-15);
+  var thirdMise=third?(egg&&!egg.par&&st[egg.i]===third?egg.e:third.s):null;
+  var earlyEnd=third?Math.min(thirdMise,c.open-15):c.open;
   var ykMise=st.map(function(x,i){return i}).filter(function(i){return(hasR(st[i],"kiji")||hasR(st[i],"yaki")||solo===st[i])&&!hasR(st[i],"make")&&Math.max(st[i].s,yS)<earlyEnd}).map(function(i){return{i:i,s:Math.max(st[i].s,yS)}});
   var mEnd=c.open-15;
   // 店売り作成の開始を逆算：人が順に来るので後ろから積む
