@@ -558,8 +558,10 @@ function laborCalc(p){var L=air&&air.labor;if(!L||!L.unitValue||L.storeSalesFore
   var pieces=cur.total||stVal(p)+evVal(p);if(!pieces)return null;
   var prod=pieces*L.unitValue,cap=prod*L.rateProduction/100;
   var mins=p.staff.reduce(function(s,x,i){var k=curB.filter(function(b){return b.p===i&&b.k==="kyu"}).reduce(function(a,b){return a+b.e-b.s},0);return s+Math.max(0,x.e-x.s-k)},0);
-  var plan=mins/60*L.hourlyWage,gap=cap-plan;
-  return{unit:L.unitValue,prod:prod,ratio:prod?plan/prod*100:0,cap:cap,plan:plan,gap:gap,gapH:Math.round(gap/L.hourlyWage*10)/10,hours:Math.round(mins/6)/10,wage:L.hourlyWage,rp:L.rateProduction,rs:L.rateStoreSales,sales:L.storeSalesForecast}}
+  var emp=L.employees||[],ed=L.employeeDaily,ne=0,pm=0;
+  p.staff.forEach(function(x,i){var k=curB.filter(function(b){return b.p===i&&b.k==="kyu"}).reduce(function(a,b){return a+b.e-b.s},0),m=Math.max(0,x.e-x.s-k);if(ed&&emp.indexOf(x.name)>=0)ne++;else pm+=m});
+  var plan=ed?ne*ed+pm/60*L.hourlyWage:mins/60*L.hourlyWage,gap=cap-plan;
+  return{unit:L.unitValue,prod:prod,ratio:prod?plan/prod*100:0,cap:cap,plan:plan,gap:gap,gapH:Math.round(gap/L.hourlyWage*10)/10,hours:Math.round(mins/6)/10,emp:ed?ne:0,partH:Math.round(pm/6)/10,wage:L.hourlyWage,rp:L.rateProduction,rs:L.rateStoreSales,sales:L.storeSalesForecast}}
 function warn(p,A){
   var L=[],st=p.staff,c=CONF;
   function bad(s){L.push('<li class="bad">'+esc(s)+'</li>')}
@@ -582,7 +584,7 @@ function warn(p,A){
   
   
   var lb=laborCalc(p);
-  if(lb){var m="人件費 "+yen(lb.plan)+"（"+lb.hours+"時間×"+yen(lb.wage)+"）÷ 製造額 "+yen(lb.prod)+"（"+Math.round(lb.prod/lb.unit)+"個×"+yen(lb.unit)+"）＝ "+(Math.round(lb.ratio*10)/10)+"%（目安"+lb.rp+"%・枠 "+yen(lb.cap)+"）→ "+(lb.gap>=0?"枠まで残り ":"枠を超過 ")+yen(Math.abs(lb.gap))+"（約"+Math.abs(lb.gapH)+"時間）";
+  if(lb){var m="人件費 "+yen(lb.plan)+(lb.emp?"（社員"+lb.emp+"人は月給の日額・ほか"+lb.partH+"時間×"+yen(lb.wage)+"）":"（"+lb.hours+"時間×"+yen(lb.wage)+"）")+"÷ 製造額 "+yen(lb.prod)+"（"+Math.round(lb.prod/lb.unit)+"個×"+yen(lb.unit)+"）＝ "+(Math.round(lb.ratio*10)/10)+"%（目安"+lb.rp+"%・枠 "+yen(lb.cap)+"）→ "+(lb.gap>=0?"枠まで残り ":"枠を超過 ")+yen(Math.abs(lb.gap))+"（約"+Math.abs(lb.gapH)+"時間）";
     if(lb.gap>=0)ok(m+"。人件費率は目標の内側です");else bad(m+"。人件費率が目標を超えます（早上がり・作業の前倒しを検討）")}
   $("warn").innerHTML=L.join('');
 }
