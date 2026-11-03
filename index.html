@@ -474,7 +474,7 @@ function layLanes(list){var idx=list.map(function(b,i){return i}).sort(function(
 function X(t){return(t-T0)/(T1-T0)*100}
 function useActual(){var a=air&&air.actual;cur.actual=false;if(!a||!a.blocks||!a.blocks.length)return;
   cur.blocks=a.blocks;cur.storeN=0;cur.eventN=0;a.blocks.forEach(function(b){if(b.name.indexOf("店舗")>=0)cur.storeN+=dayCount(b);else cur.eventN+=dayCount(b)});
-  cur.total=cur.storeN+cur.eventN;if(a.kaiten){cur.kaiten=Math.round(a.kaiten*10)/10;cur.rot=Math.ceil(a.kaiten)}cur.actual=true}
+  cur.total=cur.storeN+cur.eventN;if(a.kaiten){cur.kaiten=Math.round(a.kaiten*10)/10;cur.rot=Math.ceil(a.kaiten)}cur.actual=!!a.past}
 function isMan(p,k){return!!(p.ov&&p.ov[k]!=null&&p.ov[k]!=="")}
 function manC(p,k){return isMan(p,k)?" man":""}
 function manL(p,k){return isMan(p,k)?"（手入力）":cur.actual?"（実績）":""}
