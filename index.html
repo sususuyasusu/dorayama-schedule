@@ -80,6 +80,7 @@ textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;b
 .big b{font-size:24pt;font-weight:900;line-height:1.05}
 .big b i{font-size:11pt;font-style:normal;font-weight:700;margin-left:.5mm}
 .big .labr{border-color:#1f6fb2;background:#eef5fb}.big .labr.neg{border-color:#c8372d;background:#fdeceb}.big .labr.neg b{color:#c8372d}
+.big .man{border-color:#e07b12;background:#fff4e5}
 .big .lead{min-width:48mm}.big .lead b{font-size:17pt;line-height:1.5}
 .gantt{flex:1;min-height:0;display:flex;flex-direction:column;border:.3mm solid #aaa;--nw:43mm}
 .grow{display:flex;position:relative}
@@ -471,12 +472,15 @@ function layLanes(list){var idx=list.map(function(b,i){return i}).sort(function(
     for(var l=0;l<ends.length&&ends[l]>b.s;l++);ends[l]=b.e;grp.push({i:i,l:l})});
   flush();out.max=max;return out}
 function X(t){return(t-T0)/(T1-T0)*100}
+function isMan(p,k){return!!(p.ov&&p.ov[k]!=null&&p.ov[k]!=="")}
+function manC(p,k){return isMan(p,k)?" man":""}
+function manL(p,k){return isMan(p,k)?"（手入力）":""}
 function render(){
   var p=plan(),A=compute(p),B=bars(p,A),ds=$("date").value,d=parseD(ds);
   curB=B;
   var lead=p.staff.filter(function(x){return x.lead})[0];
   var h='<div class="hd"><div><div class="ttl">門仲どらやき どら山｜当日の時間割</div><div class="d">'+(d.getMonth()+1)+'/'+d.getDate()+'<small>（'+WD[d.getDay()]+'）</small></div></div>'+(p.note?'<div class="hnote ed" id="noteEd"><span>責任者からひとこと</span>'+esc(p.note)+'</div>':'<div class="hnote empty ed np" id="noteEd">ここをタップしてひとことを書く</div>')+
-   '<div class="big"><div class="ed" data-ov="rot"><span>回転数</span><b>'+(cur.kaiten&&!(p.ov&&p.ov.rot)?cur.kaiten:rotVal(p))+'</b></div><div class="ed" data-ov="store"><span>店売り</span><b>'+stVal(p)+'<i>個</i></b></div><div class="ed" data-ov="event"><span>催事</span><b>'+evVal(p)+'<i>個</i></b></div>'+
+   '<div class="big"><div class="ed'+manC(p,"rot")+'" data-ov="rot"><span>回転数'+manL(p,"rot")+'</span><b>'+(cur.kaiten&&!(p.ov&&p.ov.rot)?cur.kaiten:rotVal(p))+'</b></div><div class="ed'+manC(p,"store")+'" data-ov="store"><span>店売り'+manL(p,"store")+'</span><b>'+stVal(p)+'<i>個</i></b></div><div class="ed'+manC(p,"event")+'" data-ov="event"><span>催事'+manL(p,"event")+'</span><b>'+evVal(p)+'<i>個</i></b></div>'+
    '<div><span>生地STOP</span><b>'+hm(CONF.stopKiji)+'</b></div><div><span>焼きSTOP</span><b>'+hm(CONF.stopYaki)+'</b></div><div><span>開店</span><b>'+hm(CONF.open)+'</b></div>'+(function(){var lb=laborCalc(p);if(!lb)return'';return'<div class="labr'+(lb.gap<0?' neg':'')+'"><span>人件費 '+(lb.gap>=0?'枠まで残り':'枠を超過')+'（約'+Math.abs(lb.gapH)+'時間）</span><b>'+Math.round(Math.abs(lb.gap)).toLocaleString("ja-JP")+'<i>円</i></b></div>'})()+'<div class="lead"><span>今日の責任者</span><b>'+(lead&&lead.name?esc(lead.name):'&nbsp;')+'</b></div></div></div>';
   // 時間割
   var gr='',tk='',MK=[[CONF.open,"開店","#1f8a4c"],[CONF.stopKiji,"生地STOP","#e07b12"],[CONF.stopYaki,"焼きSTOP","#c8372d"],[CONF.saiEnd,"催事作成STOP","#1f6fb2"],[CONF.close,"閉店","#6a3fa0"]];
