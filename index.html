@@ -217,7 +217,7 @@ var SHEET_ID="1PRDhGP_4xiO_ZjJP3NB9Id3PmaPa5W7hNyrqFQ5EyqM";
 var T0=7*60,T1=16*60+30;
 var ROLES=[["kiji","生地"],["yaki","焼き"],["make","作成"],["reji","レジ"]];
 // 所要の初期値（推定）。実際の終了時刻の記入をもとに直していく
-var CONF={open:600,stopKiji:660,stopYaki:690,saiEnd:930,pace:15,eggMin:45,paceYaki2:12,paceYaki1:20,rate:80,hourlyRef:23,yakiLag:20,kataKiji:15,kataYaki:20,zaiko:910,kata:930,pmStart:900,pmPrep:930,close:960,closeWork:15};
+var CONF={open:600,stopKiji:660,stopYaki:690,saiEnd:930,pace:15,eggMin:45,paceYaki2:12,paceYaki1:20,rate:80,hourlyRef:23,yakiLag:20,kataKiji:15,kataYaki:15,zaiko:910,kata:930,pmStart:900,pmPrep:930,close:960,closeWork:15};
 var KIND={
  kiji:{t:"生地",c:"k-kiji"},yaki:{t:"焼き",c:"k-yaki"},yjun:{t:"焼台準備",c:"k-jun"},kkat:{t:"生地清掃",c:"k-kata"},ykat:{t:"焼台清掃",c:"k-kata"},
  jun:{t:"作成の準備",c:"k-jun"},mise:{t:"店売り作成",c:"k-mise"},open:{t:"開店準備",c:"k-open"},
@@ -448,7 +448,7 @@ function buildBars(p,A){var out=[];
   // 休憩の前後に残る20分以下の細切れは、隣の作業に吸収する
   for(var j=out.length-1;j>=0;j--){var b=out[j];
     if(!((b.k==="shik"||b.k==="sai")&&b.e-b.s<=20)&&!(b.k==="jun"&&b.e-b.s<=15))continue;
-    var pv=out[j-1],nx=out[j+1];pv=pv&&pv.p===b.p?pv:null;nx=nx&&nx.p===b.p?nx:null;
+    var MK=["sai","mise","kiji","yaki","jun"],pv=out[j-1],nx=out[j+1];pv=pv&&pv.p===b.p&&pv.e===b.s&&MK.indexOf(pv.k)>=0?pv:null;nx=nx&&nx.p===b.p&&nx.s===b.e&&MK.indexOf(nx.k)>=0?nx:null;
     if(nx&&nx.k!=="kyu"){nx.s=b.s;out.splice(j,1)}else if(pv&&pv.k!=="kyu"){pv.e=b.e;out.splice(j,1)}}
   var sp=[];out.forEach(function(b){String(b.k).split("+").forEach(function(k){sp.push({p:b.p,s:b.s,e:b.e,k:k})})});
   var mg=[];sp.forEach(function(b){var o=mg.filter(function(y){return y.p===b.p&&y.k===b.k&&y.e===b.s})[0];if(o)o.e=b.e;else mg.push(b)});
