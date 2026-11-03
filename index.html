@@ -384,16 +384,16 @@ function compute(p){
   // 生地は焼きの20分前に1回転ずつ仕上げる（焼ける回数を超えて作らない）
   var gE=Math.min(c.stopKiji,Math.max(gS+15,Math.round((yE-c.yakiLag)/5)*5));
   var pace=reach?(yE-yS)/reach:c.pace;
-  var ykMise=null;
-  if(ys.length&&!st.some(function(x){return hasR(x,"make")&&x.s<c.open})){var yk=ys.slice().sort(function(x,y){return x.s-y.s})[0];
-    if(yk.s<c.open){ykMise={i:st.indexOf(yk),s:startOf(yk)};msPeople=msPeople.concat([{s:ykMise.s,e:yk.e}])}}
+  var third=st.filter(function(x){return hasR(x,"make")&&!hasR(x,"kiji")&&!hasR(x,"yaki")}).sort(function(a,b){return a.s-b.s})[0];
+  var earlyEnd=Math.min(third?third.s:c.open,c.open-15);
+  var ykMise=st.map(function(x,i){return i}).filter(function(i){return(hasR(st[i],"kiji")||hasR(st[i],"yaki")||solo===st[i])&&!hasR(st[i],"make")&&Math.max(st[i].s,yS)<earlyEnd}).map(function(i){return{i:i,s:Math.max(st[i].s,yS)}});
   var mEnd=c.open-15;
   // 店売り作成の開始を逆算：人が順に来るので後ろから積む
   var need=stVal(p)/c.rate*60,mS=mEnd,acc=0;
   while(acc<need&&mS>T0){mS-=5;acc+=5*msPeople.filter(function(x){return x.s<=mS&&x.e>mS}).length;if(!msPeople.some(function(x){return x.s<=mS}))break}
-  var mDone=mEnd,left=need-acc;if(left>0)mDone=c.open;
+  var mDone=mEnd,left=need-acc;
   while(left>0&&mDone<c.close){var mk=st.filter(function(x){return hasR(x,"make")&&x.s<=mDone&&x.e>mDone}).length;if(!mk)break;left-=5*mk;mDone+=5}
-  A={pm:st.map(function(x,i){return i}).filter(function(i){return st[i].s<=c.pmStart&&st[i].e>c.pmStart+15}).sort(function(a,b){return st[b].e-st[a].e}),rot:rot,reach:reach,Bat:Bat,egg:egg,ykMise:ykMise,solo:soloA,yN:yN,pace:pace,gS:gS,gE:gE,yS:yS,yE:yE,mS:mS,mEnd:mEnd,mDone:mDone,eE:Infinity};
+  A={pm:st.map(function(x,i){return i}).filter(function(i){return st[i].s<=c.pmStart&&st[i].e>c.pmStart+15}).sort(function(a,b){return st[b].e-st[a].e}),rot:rot,reach:reach,Bat:Bat,egg:egg,ykMise:ykMise,earlyEnd:earlyEnd,solo:soloA,yN:yN,pace:pace,gS:gS,gE:gE,yS:yS,yE:yE,mS:mS,mEnd:mEnd,mDone:mDone,eE:Infinity};
   // 休憩：6時間超は45分、8時間超は60分。レジは13時台
   var cand=st.map(function(x,i){return{i:i,x:x}}).filter(function(o){return o.x.e-o.x.s>360});
   var base=Math.max(yE+c.kataYaki,gE+c.kataKiji,705);base=Math.ceil(base/15)*15;
@@ -439,7 +439,7 @@ function kindOf(role,t,A){var c=CONF;
     return"jun"}
   if(role==="kiji"){if(t<A.gE)return"kiji";if(t<A.gE+c.kataKiji)return"kkat"}
   if(role==="yaki"){if(t<A.yS)return"yjun";if(t<A.yE)return"yaki";if(t<A.yE+c.kataYaki)return"ykat"}
-  if(role==="make"){if(t>=c.open-15&&t<c.open)return"open";if(t<A.mS)return"jun";if(t<A.mDone)return"mise"}
+  if(role==="make"){if(t>=c.open-15&&t<c.open)return"open";if(t<A.mS)return"jun";if(t<Math.min(A.mDone,c.open-15))return"mise"}
   if(t<A.eE)return"sai";
   return null}
 function buildBars(p,A){var out=[];
@@ -451,7 +451,7 @@ function buildBars(p,A){var out=[];
     if(i===closer)out.push({p:i,s:CONF.close,e:CONF.close+CONF.closeWork,k:"clos"})});
   if(A.egg&&A.egg.par)out.push({p:A.egg.i,s:A.egg.s,e:A.egg.e,k:"egg"});
   if(A.solo){if(A.solo.addK&&A.gE>A.gS)out.push({p:A.solo.i,s:A.gS,e:A.gE,k:"kiji"});if(A.solo.addY&&A.yE>A.yS)out.push({p:A.solo.i,s:A.yS,e:A.yE,k:"yaki"})}
-  if(A.ykMise&&A.mEnd>Math.max(A.mS,A.ykMise.s))out.push({p:A.ykMise.i,s:Math.max(A.mS,A.ykMise.s),e:A.mEnd,k:"mise"});
+  (A.ykMise||[]).forEach(function(o){if(A.earlyEnd>o.s)out.push({p:o.i,s:o.s,e:A.earlyEnd,k:"mise"})});
   // 休憩の前後に残る20分以下の細切れは、隣の作業に吸収する
   for(var j=out.length-1;j>=0;j--){var b=out[j];
     if(!((b.k==="shik"||b.k==="sai")&&b.e-b.s<=20)&&!(b.k==="jun"&&b.e-b.s<=15))continue;
