@@ -350,16 +350,16 @@ function compute(p){
   if(p.bars)p.bars=p.bars.filter(function(b){return!/(^|\+)(reji|cov|hoju)(\+|$)/.test(String(b.k))});
   var c=CONF,st=p.staff,rot=Math.ceil(rotVal(p)),A={};
   var ks=st.filter(function(x){return hasR(x,"kiji")}),ys=st.filter(function(x){return hasR(x,"yaki")});
-  var early=st.filter(function(x){return x.s<c.open}),solo=early.length===1?early[0]:null,soloA=null;
-  if(solo){soloA={i:st.indexOf(solo),addK:ks.indexOf(solo)<0,addY:ys.indexOf(solo)<0};if(soloA.addK)ks=ks.concat([solo]);if(soloA.addY)ys=ys.concat([solo])}
+  var arr=st.slice().sort(function(a,b){return a.s-b.s}),secondS=arr.length>1?arr[1].s:c.close,solo=arr.length&&arr[0].s<secondS?arr[0]:null,soloA=null;
+  if(solo){soloA={i:st.indexOf(solo),until:secondS,addK:ks.indexOf(solo)<0,addY:ys.indexOf(solo)<0};if(soloA.addK)ks=ks.concat([solo]);if(soloA.addY)ys=ys.concat([solo])}
   var msPeople=st.filter(function(x){return hasR(x,"make")||hasR(x,"reji")});
   // 卵計量：いちばん早く来る人が出勤直後に行う（同じ時刻なら 作成→焼き→生地 の順）
   var egg=null,wd=parseD($("date").value).getDay();
   if(wd===2||wd===4||wd===6){var lim=c.eggBy-c.eggMin;
     var mk=st.filter(function(x){return hasR(x,"make")&&!hasR(x,"kiji")&&!hasR(x,"yaki")&&x.s<=lim}).sort(function(x,y){return x.s-y.s})[0];
-    if(mk)egg={i:st.indexOf(mk),s:mk.s,e:mk.s+c.eggMin,par:false};
+    if(mk){var ms=mk===arr[0]?Math.min(Math.max(mk.s,secondS),lim):mk.s;egg={i:st.indexOf(mk),s:ms,e:ms+c.eggMin,par:ms!==mk.s}}
     else{var kj=st.filter(function(x){return hasR(x,"kiji")}).sort(function(x,y){return x.s-y.s})[0]||st.slice().sort(function(x,y){return x.s-y.s})[0];
-      if(kj){var es=Math.min(kj.s+15,lim);egg={i:st.indexOf(kj),s:es,e:es+c.eggMin,par:true}}}}
+      if(kj){var es=Math.min(Math.max(kj.s+15,secondS),lim);egg={i:st.indexOf(kj),s:es,e:es+c.eggMin,par:true}}}}
   var startOf=function(x){return x.s};
   var gS=ks.length?Math.min.apply(null,ks.map(startOf)):c.pace+T0;
   var handStart=function(k){if(!p.bars)return null;var v=p.bars.filter(function(b){return String(b.k).split("+").indexOf(k)>=0}).map(function(b){return b.s});return v.length?Math.min.apply(null,v):null};
@@ -371,7 +371,7 @@ function compute(p){
   var hb=p.bars&&p.bars.some(function(b){return String(b.k).split("+").indexOf("yaki")>=0})?p.bars:null;
   var capAt=function(t){var n;
     if(hb){var who={};hb.forEach(function(b){if(String(b.k).split("+").indexOf("yaki")>=0&&b.s<=t&&b.e>t)who[b.p]=1});n=Object.keys(who).length}
-    else n=ys.filter(function(x){return x.s<=t&&x.e>t&&!(egg&&st[egg.i]===x&&t<egg.e)}).length;
+    else n=ys.filter(function(x){return x.s<=t&&x.e>t&&!(egg&&!egg.par&&st[egg.i]===x&&t<egg.e)&&!(soloA&&soloA.addY&&x===solo&&t>=soloA.until)}).length;
     return n>=2?1/c.paceYaki2:n===1?1/c.paceYaki1:0};
   var sim=function(rho){var v=0,tl=[];for(var t=yS;t<W;t+=5){v+=5*Math.min(capAt(t),rho);tl.push([t+5,v])}return tl};
   var tl=sim(1),C=tl.length?tl[tl.length-1][1]:0;
@@ -450,7 +450,7 @@ function buildBars(p,A){var out=[];
       if(n!==k){if(k)out.push({p:i,s:s,e:t,k:k});k=n;s=t}}
     if(i===closer)out.push({p:i,s:CONF.close,e:CONF.close+CONF.closeWork,k:"clos"})});
   if(A.egg&&A.egg.par)out.push({p:A.egg.i,s:A.egg.s,e:A.egg.e,k:"egg"});
-  if(A.solo){if(A.solo.addK&&A.gE>A.gS)out.push({p:A.solo.i,s:A.gS,e:A.gE,k:"kiji"});if(A.solo.addY&&A.yE>A.yS)out.push({p:A.solo.i,s:A.yS,e:A.yE,k:"yaki"})}
+  if(A.solo){var su=A.solo.until;if(A.solo.addK&&Math.min(A.gE,su)>A.gS)out.push({p:A.solo.i,s:A.gS,e:Math.min(A.gE,su),k:"kiji"});if(A.solo.addY&&Math.min(A.yE,su)>A.yS)out.push({p:A.solo.i,s:A.yS,e:Math.min(A.yE,su),k:"yaki"})}
   (A.ykMise||[]).forEach(function(o){if(A.earlyEnd>o.s)out.push({p:o.i,s:o.s,e:A.earlyEnd,k:"mise"})});
   // 休憩の前後に残る20分以下の細切れは、隣の作業に吸収する
   for(var j=out.length-1;j>=0;j--){var b=out[j];
