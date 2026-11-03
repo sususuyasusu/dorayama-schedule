@@ -429,7 +429,7 @@ function render(){
    '<div class="big"><div class="ed" data-ov="rot"><span>回転数</span><b>'+(cur.kaiten&&!(p.ov&&p.ov.rot)?cur.kaiten:rotVal(p))+'</b></div><div class="ed" data-ov="store"><span>店売り</span><b>'+stVal(p)+'<i>個</i></b></div><div class="ed" data-ov="event"><span>催事</span><b>'+evVal(p)+'<i>個</i></b></div>'+
    '<div><span>生地STOP</span><b>'+hm(CONF.stopKiji)+'</b></div><div><span>焼きSTOP</span><b>'+hm(CONF.stopYaki)+'</b></div><div><span>開店</span><b>'+hm(CONF.open)+'</b></div><div class="lead"><span>今日の責任者</span><b>'+(lead&&lead.name?esc(lead.name):'&nbsp;')+'</b></div></div></div>';
   // 時間割
-  var gr='',tk='',MK=[[CONF.open,"開店","#1f8a4c"],[CONF.stopKiji,"生地STOP","#e07b12"],[CONF.stopYaki,"焼きSTOP","#c8372d"],[CONF.close,"閉店","#6a3fa0"]];
+  var gr='',tk='',MK=[[CONF.open,"開店","#1f8a4c"],[CONF.stopKiji,"生地STOP","#e07b12"],[CONF.stopYaki,"焼きSTOP","#c8372d"],[930,"催事作成終了","#1f6fb2"],[CONF.close,"閉店","#6a3fa0"]];
   var mk=MK.map(function(m){return'<div class="mk" style="left:'+X(m[0])+'%;border-color:'+m[2]+'"></div>'}).join('');
   var mkL=MK.map(function(m){return'<span class="mkl" style="left:'+X(m[0])+'%;background:'+m[2]+'">'+m[1]+'</span>'}).join('');
   for(var t=T0;t<=T1;t+=15){if(t>T0&&t<T1)gr+='<div class="grid '+(t%60===0?'h':t%30===0?'m':'')+'" style="left:'+X(t)+'%"></div>'}
