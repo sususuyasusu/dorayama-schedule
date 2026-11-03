@@ -217,7 +217,7 @@ var SHEET_ID="1PRDhGP_4xiO_ZjJP3NB9Id3PmaPa5W7hNyrqFQ5EyqM";
 var T0=7*60,T1=16*60+30;
 var ROLES=[["kiji","生地"],["yaki","焼き"],["make","作成"],["reji","レジ"]];
 // 所要の初期値（推定）。実際の終了時刻の記入をもとに直していく
-var CONF={open:600,stopKiji:660,stopYaki:690,saiEnd:930,pace:15,paceMin:12,rate:80,hourlyRef:23,yakiLag:20,kataKiji:15,kataYaki:20,zaiko:910,kata:930,close:960,closeWork:15};
+var CONF={open:600,stopKiji:660,stopYaki:690,saiEnd:930,pace:15,paceYaki2:12,paceYaki1:20,rate:80,hourlyRef:23,yakiLag:20,kataKiji:15,kataYaki:20,zaiko:910,kata:930,close:960,closeWork:15};
 var KIND={
  kiji:{t:"生地",c:"k-kiji"},yaki:{t:"焼き",c:"k-yaki"},yjun:{t:"焼台準備",c:"k-jun"},kkat:{t:"生地片付け",c:"k-kata"},ykat:{t:"焼台清掃",c:"k-kata"},
  jun:{t:"作成の準備",c:"k-jun"},mise:{t:"店売り作成",c:"k-mise"},hoju:{t:"補充",c:"k-jun"},open:{t:"開店準備",c:"k-open"},reji:{t:"レジ・接客",c:"k-reji"},cov:{t:"レジ交代",c:"k-reji"},
@@ -349,16 +349,18 @@ function compute(p){
   var ks=st.filter(function(x){return hasR(x,"kiji")}),ys=st.filter(function(x){return hasR(x,"yaki")});
   var msPeople=st.filter(function(x){return hasR(x,"make")||hasR(x,"reji")});
   var gS=ks.length?Math.min.apply(null,ks.map(function(x){return x.s})):c.pace+T0;
-  var pace=rot?Math.max(c.paceMin,Math.min(c.pace,(c.stopKiji-gS)/rot)):c.pace;
+  var yN=ys.length,pm=yN>=2?c.paceYaki2:c.paceYaki1;
+  var pace=rot?Math.max(pm,Math.min(c.pace,(c.stopKiji-gS)/rot)):c.pace;
   var gE=Math.min(c.stopKiji,Math.round((gS+rot*pace)/5)*5);
-  var yS=gS+c.yakiLag,yE=Math.min(c.stopYaki,gE+c.yakiLag);
+  var ys0=ys.length?Math.min.apply(null,ys.map(function(x){return x.s})):gS,yS=Math.max(gS+c.yakiLag,ys0);
+  var yE=Math.min(c.stopYaki,Math.max(gE+c.yakiLag,yS+rot*pace));
   var mEnd=c.open-15;
   // 店売り作成の開始を逆算：人が順に来るので後ろから積む
   var need=stVal(p)/c.rate*60,mS=mEnd,acc=0;
   while(acc<need&&mS>T0){mS-=5;acc+=5*msPeople.filter(function(x){return x.s<=mS&&x.e>mS}).length;if(!msPeople.some(function(x){return x.s<=mS}))break}
   var mDone=mEnd,left=need-acc;
   while(left>0&&mDone<c.close){var mk=st.filter(function(x){return hasR(x,"make")&&x.s<=mDone&&x.e>mDone}).length;if(!mk)break;left-=5*mk;mDone+=5}
-  A={rot:rot,reach:Math.min(rot,Math.floor((gE-gS)/pace+.001)),pace:pace,gS:gS,gE:gE,yS:yS,yE:yE,mS:mS,mEnd:mEnd,mDone:mDone,eE:Infinity};
+  A={rot:rot,reach:Math.min(rot,Math.floor((gE-gS)/pace+.001),Math.floor((c.stopYaki-yS)/pace+.001)),yN:yN,pace:pace,gS:gS,gE:gE,yS:yS,yE:yE,mS:mS,mEnd:mEnd,mDone:mDone,eE:Infinity};
   // 休憩：6時間超は45分、8時間超は60分。レジは13時台
   var cand=st.map(function(x,i){return{i:i,x:x}}).filter(function(o){return o.x.e-o.x.s>360});
   var base=Math.max(yE+c.kataYaki,gE+c.kataKiji,705);base=Math.ceil(base/15)*15;
@@ -514,7 +516,7 @@ function warn(p,A){
   
   if(!st.some(function(x){return x.lead}))bad("責任者を星印で選んでください");
   if(!A.rot)bad("回転数が0です");
-  if(A.reach<A.rot)bad("生地は1時間5回転が上限です。"+hm(A.gS)+"開始だと"+hm(c.stopKiji)+"までに"+A.reach+"回転で、"+A.rot+"回転に届きません（開始を早める／回転数を調整）");
+  if(A.reach<A.rot)bad("焼き"+A.yN+"人だと1時間"+(A.yN>=2?5:3)+"回転が上限です。この人数と時間では"+A.reach+"回転までで、"+A.rot+"回転に届きません（焼きを2人にする／早く始める／回転数を調整）");
   var needM=stVal(p)/c.rate*60,doneT=miseDone(p,curB);
   if(needM&&(doneT===null||doneT>A.mEnd))bad("店売り作成が開店前の"+hm(A.mEnd)+"に終わりません。"+stVal(p)+"個に約"+Math.ceil(needM)+"分（1人1時間"+c.rate+"個の推定）かかり、今の帯だと"+(doneT===null?"終わりません":hm(doneT)+"までかかります")+"（朝の人を増やす／帯を足す）");
   if(A.eShort||A.eE>c.saiEnd)bad("催事作成が"+hm(c.saiEnd)+"までに終わりません（人を足すか帯を調整）");
