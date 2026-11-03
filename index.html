@@ -411,15 +411,18 @@ function compute(p){
   var e=evVal(p)/c.rate*60,got=0,t=mEnd;
   while(got<e&&t<c.close){st.forEach(function(x,i){if(x.s<=t&&x.e>t&&kindAt(x,i,t,A)==="sai")got+=5});t+=5}
   A.eE=e?t:mEnd;A.eShort=got<e;
+  var T=Math.max(c.pmStart,Math.ceil(Math.min(A.eE,c.saiEnd)/15)*15);
+  A.pm=st.map(function(x,i){return i}).filter(function(i){return st[i].s<=T&&st[i].e>T}).sort(function(a,b){return st[b].e-st[a].e});
+  A.pmT=T;A.pmP=Math.max(c.pmPrep,T+(A.pm.length===1?30:15));
   return A}
 function kindAt(x,i,t,A){
   var c=CONF,b=A.brk[i];
   if(b&&t>=b.s&&t<b.e)return"kyu";
   if(A.egg&&!A.egg.par&&A.egg.i===i&&t>=A.egg.s&&t<A.egg.e)return"egg";
-  var c2=CONF;if(A.pm&&t>=c2.pmStart&&t<c2.close){var j=A.pm.indexOf(i);
-    // 1人目：15:00在庫→15:30翌日の仕込み／2人目：15:00清掃（1人だけの日は1人目が15:15から清掃）
-    if(j===0){if(t<c2.pmStart+15)return"zai";if(t>=c2.pmPrep)return"shik";if(A.pm.length===1)return"kata"}
-    if(j===1&&t<c2.pmStart+15)return"kata"}
+  var c2=CONF;if(A.pm&&A.pmT!=null&&t>=A.pmT&&t<c2.close){var j=A.pm.indexOf(i),T=A.pmT;
+    // 1人目：在庫→翌日の仕込み／2人目：清掃（1人だけの日は1人目が在庫→清掃→仕込み）
+    if(j===0){if(t<T+15)return"zai";if(A.pm.length===1&&t<T+30)return"kata";if(t>=A.pmP)return"shik";return null}
+    if(j===1){if(t<T+15)return"kata";return null}}
   var cv=A.cover[i];if(cv&&t>=cv.s&&t<cv.e)return"cov";
   var k1=kindOf(x.role,t,A);if(!x.role2||x.role2===x.role)return k1;
   var k2=kindOf(x.role2,t,A);if(!k2||k1===k2)return k1;if(!k1)return k2;
@@ -520,7 +523,7 @@ function checkBox(p,A,B){
   add(lastEnd(B,"sai"),"催事作成 完了 "+evVal(p)+"個");
   add(840,"売切れそうなら追加");
   add(CONF.close,"翌日の仕込み 完了");
-  add(CONF.pmStart+15,"在庫・清掃 完了");
+  add(A.pmT+15,"在庫・清掃 完了");
   add(CONF.close+CONF.closeWork,"閉店作業 完了・日報");
   L.sort(function(a,b){return a.t-b.t});
   var half=Math.ceil(L.length/2);
