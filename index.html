@@ -411,7 +411,7 @@ function compute(p){
   var e=evVal(p)/c.rate*60,got=0,t=mEnd;
   while(got<e&&t<c.close){st.forEach(function(x,i){if(x.s<=t&&x.e>t&&kindAt(x,i,t,A)==="sai")got+=5});t+=5}
   A.eE=e?t:mEnd;A.eShort=got<e;
-  var T=Math.max(c.pmStart,Math.ceil(Math.min(A.eE,c.saiEnd)/15)*15);
+  var T=Math.max(c.pmStart,Math.round(Math.min(A.eE,c.saiEnd)/15)*15);
   A.pm=st.map(function(x,i){return i}).filter(function(i){return st[i].s<=T&&st[i].e>T}).sort(function(a,b){return st[b].e-st[a].e});
   A.pmT=T;A.pmP=Math.max(c.pmPrep,T+(A.pm.length===1?30:15));
   return A}
