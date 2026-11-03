@@ -350,6 +350,8 @@ function compute(p){
   if(p.bars)p.bars=p.bars.filter(function(b){return!/(^|\+)(reji|cov|hoju)(\+|$)/.test(String(b.k))});
   var c=CONF,st=p.staff,rot=Math.ceil(rotVal(p)),A={};
   var ks=st.filter(function(x){return hasR(x,"kiji")}),ys=st.filter(function(x){return hasR(x,"yaki")});
+  var early=st.filter(function(x){return x.s<c.open}),solo=early.length===1?early[0]:null,soloA=null;
+  if(solo){soloA={i:st.indexOf(solo),addK:ks.indexOf(solo)<0,addY:ys.indexOf(solo)<0};if(soloA.addK)ks=ks.concat([solo]);if(soloA.addY)ys=ys.concat([solo])}
   var msPeople=st.filter(function(x){return hasR(x,"make")||hasR(x,"reji")});
   // 卵計量：いちばん早く来る人が出勤直後に行う（同じ時刻なら 作成→焼き→生地 の順）
   var egg=null,wd=parseD($("date").value).getDay();
@@ -384,7 +386,7 @@ function compute(p){
   while(acc<need&&mS>T0){mS-=5;acc+=5*msPeople.filter(function(x){return x.s<=mS&&x.e>mS}).length;if(!msPeople.some(function(x){return x.s<=mS}))break}
   var mDone=mEnd,left=need-acc;if(left>0)mDone=c.open;
   while(left>0&&mDone<c.close){var mk=st.filter(function(x){return hasR(x,"make")&&x.s<=mDone&&x.e>mDone}).length;if(!mk)break;left-=5*mk;mDone+=5}
-  A={rot:rot,reach:reach,Bat:Bat,egg:egg,ykMise:ykMise,yN:yN,pace:pace,gS:gS,gE:gE,yS:yS,yE:yE,mS:mS,mEnd:mEnd,mDone:mDone,eE:Infinity};
+  A={rot:rot,reach:reach,Bat:Bat,egg:egg,ykMise:ykMise,solo:soloA,yN:yN,pace:pace,gS:gS,gE:gE,yS:yS,yE:yE,mS:mS,mEnd:mEnd,mDone:mDone,eE:Infinity};
   // 休憩：6時間超は45分、8時間超は60分。レジは13時台
   var cand=st.map(function(x,i){return{i:i,x:x}}).filter(function(o){return o.x.e-o.x.s>360});
   var base=Math.max(yE+c.kataYaki,gE+c.kataKiji,705);base=Math.ceil(base/15)*15;
@@ -433,6 +435,7 @@ function buildBars(p,A){var out=[];
     for(;t<=lim;t+=5){var n=t<lim?kindAt(x,i,t,A):null;
       if(n!==k){if(k)out.push({p:i,s:s,e:t,k:k});k=n;s=t}}
     if(x.e>=CONF.close)out.push({p:i,s:CONF.close,e:CONF.close+CONF.closeWork,k:"clos"})});
+  if(A.solo){if(A.solo.addK&&A.gE>A.gS)out.push({p:A.solo.i,s:A.gS,e:A.gE,k:"kiji"});if(A.solo.addY&&A.yE>A.yS)out.push({p:A.solo.i,s:A.yS,e:A.yE,k:"yaki"})}
   if(A.ykMise&&A.mEnd>Math.max(A.mS,A.ykMise.s))out.push({p:A.ykMise.i,s:Math.max(A.mS,A.ykMise.s),e:A.mEnd,k:"mise"});
   // 休憩の前後に残る20分以下の細切れは、隣の作業に吸収する
   for(var j=out.length-1;j>=0;j--){var b=out[j];
