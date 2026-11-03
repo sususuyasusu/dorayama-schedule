@@ -445,7 +445,7 @@ function render(){
   var lead=p.staff.filter(function(x){return x.lead})[0];
   var h='<div class="hd"><div><div class="ttl">門仲どらやき どら山｜当日の時間割</div><div class="d">'+(d.getMonth()+1)+'/'+d.getDate()+'<small>（'+WD[d.getDay()]+'）</small></div></div>'+(p.note?'<div class="hnote ed" id="noteEd"><span>責任者からひとこと</span>'+esc(p.note)+'</div>':'<div class="hnote empty ed np" id="noteEd">ここをタップしてひとことを書く</div>')+
    '<div class="big"><div class="ed" data-ov="rot"><span>回転数</span><b>'+(cur.kaiten&&!(p.ov&&p.ov.rot)?cur.kaiten:rotVal(p))+'</b></div><div class="ed" data-ov="store"><span>店売り</span><b>'+stVal(p)+'<i>個</i></b></div><div class="ed" data-ov="event"><span>催事</span><b>'+evVal(p)+'<i>個</i></b></div>'+
-   '<div><span>生地STOP</span><b>'+hm(CONF.stopKiji)+'</b></div><div><span>焼きSTOP</span><b>'+hm(CONF.stopYaki)+'</b></div><div><span>開店</span><b>'+hm(CONF.open)+'</b></div>'+(function(){var lb=laborCalc(p);if(!lb)return'';return'<div class="labr'+(lb.gap<0?' neg':'')+'"><span>人件費 '+(lb.gap>=0?'余り':'不足')+'（約'+Math.abs(lb.gapH)+'時間）</span><b>'+Math.round(Math.abs(lb.gap)).toLocaleString("ja-JP")+'<i>円</i></b></div>'})()+'<div class="lead"><span>今日の責任者</span><b>'+(lead&&lead.name?esc(lead.name):'&nbsp;')+'</b></div></div></div>';
+   '<div><span>生地STOP</span><b>'+hm(CONF.stopKiji)+'</b></div><div><span>焼きSTOP</span><b>'+hm(CONF.stopYaki)+'</b></div><div><span>開店</span><b>'+hm(CONF.open)+'</b></div>'+(function(){var lb=laborCalc(p);if(!lb)return'';return'<div class="labr'+(lb.gap<0?' neg':'')+'"><span>人件費 '+(lb.gap>=0?'枠まで残り':'枠を超過')+'（約'+Math.abs(lb.gapH)+'時間）</span><b>'+Math.round(Math.abs(lb.gap)).toLocaleString("ja-JP")+'<i>円</i></b></div>'})()+'<div class="lead"><span>今日の責任者</span><b>'+(lead&&lead.name?esc(lead.name):'&nbsp;')+'</b></div></div></div>';
   // 時間割
   var gr='',tk='',MK=[[CONF.open,"開店","#1f8a4c"],[CONF.stopKiji,"生地STOP","#e07b12"],[CONF.stopYaki,"焼きSTOP","#c8372d"],[CONF.saiEnd,"催事作成STOP","#1f6fb2"],[CONF.close,"閉店","#6a3fa0"]];
   var mk=MK.map(function(m){return'<div class="mk" style="left:'+X(m[0])+'%;border-color:'+m[2]+'"></div>'}).join('');
@@ -536,7 +536,7 @@ function warn(p,A){
   
   
   var lb=laborCalc(p);
-  if(lb){var m="人件費：枠 "+yen(lb.cap)+"（製造額×"+lb.rp+"%＋店舗売上見込み×"+lb.rs+"%）／計画 "+yen(lb.plan)+"（"+lb.hours+"時間×"+yen(lb.wage)+"）→ "+(lb.gap>=0?"余り ":"不足 ")+yen(Math.abs(lb.gap))+"（約"+Math.abs(lb.gapH)+"時間）";
+  if(lb){var m="人件費：枠 "+yen(lb.cap)+"（製造額×"+lb.rp+"%＋店舗売上見込み×"+lb.rs+"%）／計画 "+yen(lb.plan)+"（"+lb.hours+"時間×"+yen(lb.wage)+"）→ "+(lb.gap>=0?"枠まで残り ":"枠を超過 ")+yen(Math.abs(lb.gap))+"（約"+Math.abs(lb.gapH)+"時間）";
     if(lb.gap>=0)L.push('<li class="'+(lb.gap>lb.cap*.1?'bad':'ok')+'">'+esc(m+(lb.gap>lb.cap*.1?"。余りが大きいので早上がり・作業の前倒しを検討":""))+'</li>');else bad(m)}
   $("warn").innerHTML=L.join('');
 }
