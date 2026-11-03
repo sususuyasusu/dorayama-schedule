@@ -361,8 +361,10 @@ function compute(p){
     if(e0)egg={i:st.indexOf(e0),s:e0.s,e:e0.s+c.eggMin}}
   var startOf=function(x){return egg&&st[egg.i]===x?egg.e:x.s};
   var gS=ks.length?Math.min.apply(null,ks.map(startOf)):c.pace+T0;
+  var handStart=function(k){if(!p.bars)return null;var v=p.bars.filter(function(b){return String(b.k).split("+").indexOf(k)>=0}).map(function(b){return b.s});return v.length?Math.min.apply(null,v):null};
+  var hk=handStart("kiji"),hy=handStart("yaki");if(hk!=null)gS=hk;
   var yN=ys.length;
-  var ys0=ys.length?Math.min.apply(null,ys.map(startOf)):gS,yS=Math.max(gS+c.yakiLag,ys0);
+  var ys0=hy!=null?hy:ys.length?Math.min.apply(null,ys.map(startOf)):gS,yS=Math.max(gS+c.yakiLag,ys0);
   // 5分ごとに、その時いる焼きの人数で焼ける量を積む（焼き2人以上=1時間5回転・1人=3回転）
   var W=c.stopYaki;
   var hb=p.bars&&p.bars.some(function(b){return String(b.k).split("+").indexOf("yaki")>=0})?p.bars:null;
