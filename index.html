@@ -589,7 +589,7 @@ function warn(p,A){
   
   
   var lb=laborCalc(p);
-  if(lb){var m="人件費 "+yen(lb.plan)+(lb.real?"（社員"+lb.real.employees+"人は月給の日割り・アルバイト"+Math.round(lb.real.partMinutes/6)/10+"時間は各自の時給"+(lb.real.unknown?"・名簿に無い"+lb.real.unknown+"人はタイミー単価":"")+"）":"（計算中・仮に"+lb.hours+"時間×"+yen(lb.wage)+"）")+"÷ 製造額 "+yen(lb.prod)+"（"+Math.round(lb.prod/lb.unit)+"個×"+yen(lb.unit)+"）＝ "+(Math.round(lb.ratio*10)/10)+"%（目安"+lb.tp+"%＝枠 "+yen(lb.cap)+"：製造額×"+lb.rp+"%＋店舗売上見込み"+yen(lb.sales)+"×"+lb.rs+"%）"→ "+(lb.gap>=0?"枠まで残り ":"枠を超過 ")+yen(Math.abs(lb.gap))+"（約"+Math.abs(lb.gapH)+"時間）";
+  if(lb){var m="人件費 "+yen(lb.plan)+(lb.real?"（社員"+lb.real.employees+"人は月給の日割り・アルバイト"+Math.round(lb.real.partMinutes/6)/10+"時間は各自の時給"+(lb.real.unknown?"・名簿に無い"+lb.real.unknown+"人はタイミー単価":"")+"）":"（計算中・仮に"+lb.hours+"時間×"+yen(lb.wage)+"）")+"÷ 製造額 "+yen(lb.prod)+"（"+Math.round(lb.prod/lb.unit)+"個×"+yen(lb.unit)+"）＝ "+(Math.round(lb.ratio*10)/10)+"%（目安"+lb.tp+"%＝枠 "+yen(lb.cap)+"：製造額×"+lb.rp+"%＋店舗売上見込み"+yen(lb.sales)+"×"+lb.rs+"%）→ "+(lb.gap>=0?"枠まで残り ":"枠を超過 ")+yen(Math.abs(lb.gap))+"（約"+Math.abs(lb.gapH)+"時間）";
     if(lb.gap>=0)ok(m+"。人件費率は目標の内側です");else bad(m+"。人件費率が目標を超えます（早上がり・作業の前倒しを検討）")}
   $("warn").innerHTML=L.join('');
 }
