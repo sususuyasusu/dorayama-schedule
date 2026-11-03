@@ -386,7 +386,7 @@ function compute(p){
   while(acc<need&&mS>T0){mS-=5;acc+=5*msPeople.filter(function(x){return x.s<=mS&&x.e>mS}).length;if(!msPeople.some(function(x){return x.s<=mS}))break}
   var mDone=mEnd,left=need-acc;if(left>0)mDone=c.open;
   while(left>0&&mDone<c.close){var mk=st.filter(function(x){return hasR(x,"make")&&x.s<=mDone&&x.e>mDone}).length;if(!mk)break;left-=5*mk;mDone+=5}
-  A={pm:st.map(function(x,i){return i}).filter(function(i){return st[i].s<=c.pmStart&&st[i].e>c.pmStart+15}),rot:rot,reach:reach,Bat:Bat,egg:egg,ykMise:ykMise,solo:soloA,yN:yN,pace:pace,gS:gS,gE:gE,yS:yS,yE:yE,mS:mS,mEnd:mEnd,mDone:mDone,eE:Infinity};
+  A={pm:st.map(function(x,i){return i}).filter(function(i){return st[i].s<=c.pmStart&&st[i].e>c.pmStart+15}).sort(function(a,b){return st[b].e-st[a].e}),rot:rot,reach:reach,Bat:Bat,egg:egg,ykMise:ykMise,solo:soloA,yN:yN,pace:pace,gS:gS,gE:gE,yS:yS,yE:yE,mS:mS,mEnd:mEnd,mDone:mDone,eE:Infinity};
   // 休憩：6時間超は45分、8時間超は60分。レジは13時台
   var cand=st.map(function(x,i){return{i:i,x:x}}).filter(function(o){return o.x.e-o.x.s>360});
   var base=Math.max(yE+c.kataYaki,gE+c.kataKiji,705);base=Math.ceil(base/15)*15;
@@ -409,10 +409,10 @@ function kindAt(x,i,t,A){
   var c=CONF,b=A.brk[i];
   if(b&&t>=b.s&&t<b.e)return"kyu";
   if(A.egg&&A.egg.i===i&&t>=A.egg.s&&t<A.egg.e)return"egg";
-  var c2=CONF;if(t>=c2.pmPrep&&t<c2.close)return"shik";
-  if(t>=c2.pmStart&&t<c2.pmPrep&&A.pm){var j=A.pm.indexOf(i);
-    if(A.pm.length===1&&j===0)return t<c2.pmStart+15?"zai":"kata";
-    if(t<c2.pmStart+15){if(j===0)return"zai";if(j===1)return"kata"}}
+  var c2=CONF;if(A.pm&&t>=c2.pmStart&&t<c2.close){var j=A.pm.indexOf(i);
+    // 1人目：15:00在庫→15:30翌日の仕込み／2人目：15:00清掃（1人だけの日は1人目が15:15から清掃）
+    if(j===0){if(t<c2.pmStart+15)return"zai";if(t>=c2.pmPrep)return"shik";if(A.pm.length===1)return"kata"}
+    if(j===1&&t<c2.pmStart+15)return"kata"}
   var cv=A.cover[i];if(cv&&t>=cv.s&&t<cv.e)return"cov";
   var k1=kindOf(x.role,t,A);if(!x.role2||x.role2===x.role)return k1;
   var k2=kindOf(x.role2,t,A);if(k1===k2)return k1;
@@ -432,8 +432,7 @@ function kindOf(role,t,A){var c=CONF;
   if(role==="make"){if(t>=c.open-15&&t<c.open)return"open";if(t<A.mS)return"jun";if(t<A.mDone)return"mise"}
   if(t<A.eE)return"sai";
   if(t<c.pmStart)return"shik";
-  if(t<c.pmPrep)return"kata";
-  return"shik"}
+  return"free"}
 function buildBars(p,A){var out=[];
   p.staff.forEach(function(x,i){var t=x.s,k=null,s=t,lim=Math.min(x.e,CONF.close);
     for(;t<=lim;t+=5){var n=t<lim?kindAt(x,i,t,A):null;
